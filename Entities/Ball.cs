@@ -18,6 +18,13 @@ namespace Breakout.Entities
             // create CollisionShape2D for the ball
             var collisionShape = new CollisionShape2D();
 
+            // assign CircleShape2D to the collision shape 
+            // with a radius of 10
+            collisionShape.Shape = new CircleShape2D {Radius = 10};
+
+            // add the ball's collision shape to the scene tree
+            AddChild(collisionShape);
+
             // connect body_entered signal to detect collisions with walls and paddle
 
 
@@ -31,6 +38,11 @@ namespace Breakout.Entities
             if (Position.X < 10 || Position.X > 790)
             {
                 velocity.X = -velocity.X; // reverse X velocity on wall collision
+            }
+
+            if (Position.Y < 10)
+            {
+                velocity.Y = -velocity.Y; // reverse Y velocity on ceiling collision
             }
 
         }
