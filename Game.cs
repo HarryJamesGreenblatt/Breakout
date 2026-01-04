@@ -14,6 +14,17 @@ namespace Breakout
         private Paddle paddle;
         #endregion
 
+        #region Signals
+        private void OnBallHitPaddle()
+        {
+            GD.Print("Ball hit the paddle!");
+        }
+        private void OnBallOutOfBounds()
+        {
+            GD.Print("Ball went out of bounds!");
+        }
+        #endregion
+
         #region Game Loop
         public override void _Ready()
         {
@@ -28,7 +39,9 @@ namespace Breakout
             var walls = new Walls();
             AddChild(walls);
 
-            // connect signals 
+            // Connect signals
+            ball.BallHitPaddle += OnBallHitPaddle;
+            ball.BallOutOfBounds += OnBallOutOfBounds;
 
 
         }

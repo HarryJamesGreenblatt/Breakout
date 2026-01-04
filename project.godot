@@ -11,8 +11,14 @@ config_version=5
 [application]
 
 config/name="Breakout"
-config/features=PackedStringArray("4.5", "Mobile")
+run/main_scene="uid://jlt77d8un4m6"
+config/features=PackedStringArray("4.5", "C#", "Mobile")
 config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=800
+window/size/viewport_height=600
 
 [dotnet]
 

@@ -7,7 +7,18 @@ namespace Breakout.Entities
     /// </summary>
     public partial class Ball : Area2D
     {
+
+        #region Signals
+        [Signal]
+        public delegate void BallHitPaddleEventHandler();
+
+        [Signal]
+        public delegate void BallOutOfBoundsEventHandler();
+        #endregion
+
+
         private Vector2 velocity = new Vector2(200, -200);
+
         public Ball()
         {
             Name = "Ball";
@@ -25,8 +36,8 @@ namespace Breakout.Entities
             // add the ball's collision shape to the scene tree
             AddChild(collisionShape);
 
-            // connect body_entered signal to detect collisions with walls and paddle
-
+            // Connect Area2D's area_entered signal
+            AreaEntered += _OnAreaEntered;
 
         }
         public override void _Process(double delta)
@@ -45,6 +56,28 @@ namespace Breakout.Entities
                 velocity.Y = -velocity.Y; // reverse Y velocity on ceiling collision
             }
 
+            if (Position.Y > 600)
+            {
+                // Ball is out of bounds (below the paddle)
+                EmitSignal(SignalName.BallOutOfBounds);
+
+                // Reset ball position
+                Position = new Vector2(400, 300);
+                velocity = new Vector2(200, -200);
+            }
+
+        }
+
+        public void _OnAreaEntered(Area2D area)
+        {
+            if (area is Paddle)
+            {
+                // Reverse Y velocity on paddle collision
+                velocity.Y = -velocity.Y;
+
+                // Emit signal for ball hitting paddle
+                EmitSignal(SignalName.BallHitPaddle);
+            }
         }
     }
 }

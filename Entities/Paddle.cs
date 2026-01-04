@@ -5,6 +5,7 @@ namespace Breakout.Entities
 {
     public partial class Paddle : Area2D
     {
+
         public Paddle()
         {
             Name = "Paddle";
@@ -13,10 +14,16 @@ namespace Breakout.Entities
 
         public override void _Ready()
         {
-            // Create a CollisionShape2D for the paddle
+            // create a CollisionShape2D for the paddle
             var collisionShape = new CollisionShape2D();
 
-            // Connect the body_entered signal to detect collisions with the ball
+            // assign a RectangleShape2D to the collision shape
+            collisionShape.Shape = new RectangleShape2D { Size = new Vector2(100, 20) };
+
+            // add the paddle's collision shape to the scene tree
+            AddChild(collisionShape);
+
+            // Connect signals
 
         }
 
