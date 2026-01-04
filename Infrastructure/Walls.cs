@@ -53,14 +53,18 @@ namespace Breakout.Infrastructure
         public override void _Ready()
         {
             // Create boundary walls using GameConfig
-            // Calculate wall sizes
+            // Walls positioned outside viewport; inner edges define play boundary
             var topWallSize = new Vector2(GameConfig.ViewportWidth, GameConfig.WallThickness);
             var verticalWallSize = new Vector2(GameConfig.WallThickness, GameConfig.ViewportHeight);
 
-            // Instantiate with collision offsets calculated from wall sizes (half-size centers the shape)
-            var topWall = new Wall("TopWall", new Vector2(0, 0), topWallSize, topWallSize / 2, GameConfig.Walls.Color);
-            var leftWall = new Wall("LeftWall", new Vector2(0, 0), verticalWallSize, verticalWallSize / 2, GameConfig.Walls.Color);
-            var rightWall = new Wall("RightWall", new Vector2(GameConfig.ViewportWidth - GameConfig.WallThickness, 0), verticalWallSize, verticalWallSize / 2, GameConfig.Walls.Color);
+            // Top wall: positioned above viewport (y = -thickness), inner edge at y=0
+            var topWall = new Wall("TopWall", new Vector2(0, -GameConfig.WallThickness), topWallSize, topWallSize / 2, GameConfig.Walls.Color);
+            
+            // Left wall: positioned left of viewport (x = -thickness), inner edge at x=0
+            var leftWall = new Wall("LeftWall", new Vector2(-GameConfig.WallThickness, 0), verticalWallSize, verticalWallSize / 2, GameConfig.Walls.Color);
+            
+            // Right wall: positioned at viewport right edge, inner edge at x=ViewportWidth
+            var rightWall = new Wall("RightWall", new Vector2(GameConfig.ViewportWidth, 0), verticalWallSize, verticalWallSize / 2, GameConfig.Walls.Color);
 
             AddChild(topWall);
             AddChild(leftWall);

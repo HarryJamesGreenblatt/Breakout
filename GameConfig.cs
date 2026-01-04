@@ -31,9 +31,9 @@ namespace Breakout
             public static readonly Color Color = new Color(0, 1, 0, 1);
             public const float Speed = 600f;
 
-            // Bounds calculated to keep paddle within walls: MinX at left wall, MaxX keeps paddle right edge at right wall
-            public static readonly float MinX = WallThickness;
-            public static readonly float MaxX = ViewportWidth - WallThickness - Size.X;
+            // Bounds calculated with walls positioned outside viewport: MinX at viewport left (0), MaxX keeps paddle right edge at viewport right
+            public static readonly float MinX = 0;
+            public static readonly float MaxX = ViewportWidth - Size.X;
 
             public const int CollisionLayer = 1;
             public const int CollisionMask = 1;

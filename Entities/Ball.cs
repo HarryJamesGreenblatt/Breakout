@@ -85,18 +85,18 @@ namespace Breakout.Entities
 
             float ballRadius = GameConfig.Ball.Size.X / 2;
             
-            // Bounce off left/right walls (Position is top-left, check against radius)
-            if (Position.X + ballRadius < GameConfig.WallThickness)
+            // Bounce off left/right walls (walls now positioned outside viewport at x=0 and x=ViewportWidth)
+            if (Position.X + ballRadius < 0)
             {
                 velocity.X = -velocity.X;
             }
-            else if (Position.X + ballRadius > GameConfig.ViewportWidth - GameConfig.WallThickness)
+            else if (Position.X + ballRadius > GameConfig.ViewportWidth)
             {
                 velocity.X = -velocity.X;
             }
 
-            // Bounce off ceiling
-            if (Position.Y + ballRadius < GameConfig.WallThickness)
+            // Bounce off ceiling (wall now positioned outside viewport at y=-WallThickness)
+            if (Position.Y + ballRadius < 0)
             {
                 velocity.Y = -velocity.Y;
             }
