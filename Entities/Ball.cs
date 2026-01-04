@@ -60,7 +60,9 @@ namespace Breakout.Entities
             CollisionLayer = GameConfig.Ball.CollisionLayer;
             CollisionMask = GameConfig.Ball.CollisionMask;
         }
+        #endregion
 
+        #region Game Behavior
         /// <summary>
         /// Sets up the ball entity by connecting collision signals.
         /// </summary>
@@ -79,16 +81,32 @@ namespace Breakout.Entities
             // Update position based on velocity
             Position += velocity * (float)delta;
 
-            // Bounce off left/right walls
-            if (Position.X < GameConfig.Ball.BounceMarginX || Position.X > GameConfig.ViewportWidth - GameConfig.Ball.BounceMarginX)
+            // Bounce off left/right walls (check if ball center crosses wall boundaries)
+            if (Position.X + GameConfig.Ball.BounceMarginX < GameConfig.WallThickness)
+            {
+                velocity.X = -velocity.X;
+            }
+            else if (Position.X + GameConfig.Ball.BounceMarginX > GameConfig.ViewportWidth - GameConfig.WallThickness)
             {
                 velocity.X = -velocity.X;
             }
 
             // Bounce off ceiling
-            if (Position.Y < GameConfig.Ball.BounceMarginTop)
+            if (Position.Y + GameConfig.Ball.BounceMarginTop < GameConfig.WallThickness)
             {
                 velocity.Y = -velocity.Y;
+            }
+
+            // Check for continuous paddle collision (prevents tunneling)
+            var overlappingAreas = GetOverlappingAreas();
+            foreach (var area in overlappingAreas)
+            {
+                if (area is Paddle)
+                {
+                    velocity.Y = -velocity.Y;
+                    EmitSignal(SignalName.BallHitPaddle);
+                    break;
+                }
             }
 
             // Out of bounds (below paddle)
@@ -122,5 +140,6 @@ namespace Breakout.Entities
             Position = initialPosition;
             velocity = initialVelocity;
         }
+        #endregion
     }
 }

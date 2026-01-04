@@ -10,22 +10,22 @@ namespace Breakout
     /// </summary>
     public partial class GameOrchestrator : Node2D
     {
-
+        #region Game Loop
         public override void _Ready()
         {
-            // Instantiate entities with parameters
+            // Instantiate entities using GameConfig
             var paddle = new Paddle(
-                new Vector2(400, 550),
-                new Vector2(100, 20),
-                new Color(0, 1, 0, 1) // Green
+                GameConfig.Paddle.Position,
+                GameConfig.Paddle.Size,
+                GameConfig.Paddle.Color
             );
             AddChild(paddle);
 
             var ball = new Ball(
-                new Vector2(400, 300),
-                new Vector2(20, 20),
-                new Vector2(200, -200),
-                new Color(1, 1, 0, 1) // Yellow
+                GameConfig.Ball.Position,
+                GameConfig.Ball.Size,
+                GameConfig.Ball.Velocity,
+                GameConfig.Ball.Color
             );
             AddChild(ball);
 
@@ -42,7 +42,9 @@ namespace Breakout
         {
             // Main game loop (future: game state, scoring, etc.)
         }
+        #endregion
 
+        #region Signals
         private void OnBallHitPaddle()
         {
             GD.Print("Ball hit paddle!");
@@ -52,5 +54,6 @@ namespace Breakout
         {
             GD.Print("Ball out of bounds!");
         }
+        #endregion
     }
 }

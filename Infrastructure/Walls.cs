@@ -8,21 +8,35 @@ namespace Breakout.Infrastructure
     /// </summary>
     public partial class Walls : Node
     {
+        #region Wall Definition
+        /// <summary>
+        /// A single wall with collision and visual representation rendered as a ColorRect.
+        /// </summary>
         private partial class Wall : StaticBody2D
         {
-            public Wall(string name, Vector2 position, Vector2 size, Color color)
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Wall"/> class.
+            /// </summary>
+            /// <param name="name"></param>
+            /// <param name="position"></param>
+            /// <param name="size"></param>
+            /// <param name="collisionOffset"></param>
+            /// <param name="color"></param>
+            public Wall(string name, Vector2 position, Vector2 size, Vector2 collisionOffset, Color color)
             {
                 Name = name;
                 Position = position;
 
-                // Collision shape
+                // Collision shape with explicit offset parameter
                 var collisionShape = new CollisionShape2D();
+                collisionShape.Position = collisionOffset;
                 collisionShape.Shape = new RectangleShape2D { Size = size };
                 AddChild(collisionShape);
 
                 // Visual representation
                 var visual = new ColorRect
                 {
+                    Position = Vector2.Zero,
                     Size = size,
                     Color = color
                 };
@@ -33,17 +47,25 @@ namespace Breakout.Infrastructure
                 CollisionMask = GameConfig.Walls.CollisionMask;
             }
         }
+        #endregion
 
+        #region Game Behavior
         public override void _Ready()
         {
             // Create boundary walls using GameConfig
-            var topWall = new Wall("TopWall", new Vector2(0, 0), new Vector2(GameConfig.ViewportWidth, GameConfig.WallThickness), GameConfig.Walls.Color);
-            var leftWall = new Wall("LeftWall", new Vector2(0, 0), new Vector2(GameConfig.WallThickness, GameConfig.ViewportHeight), GameConfig.Walls.Color);
-            var rightWall = new Wall("RightWall", new Vector2(GameConfig.ViewportWidth - GameConfig.WallThickness, 0), new Vector2(GameConfig.WallThickness, GameConfig.ViewportHeight), GameConfig.Walls.Color);
+            // Calculate wall sizes
+            var topWallSize = new Vector2(GameConfig.ViewportWidth, GameConfig.WallThickness);
+            var verticalWallSize = new Vector2(GameConfig.WallThickness, GameConfig.ViewportHeight);
+
+            // Instantiate with collision offsets calculated from wall sizes (half-size centers the shape)
+            var topWall = new Wall("TopWall", new Vector2(0, 0), topWallSize, topWallSize / 2, GameConfig.Walls.Color);
+            var leftWall = new Wall("LeftWall", new Vector2(0, 0), verticalWallSize, verticalWallSize / 2, GameConfig.Walls.Color);
+            var rightWall = new Wall("RightWall", new Vector2(GameConfig.ViewportWidth - GameConfig.WallThickness, 0), verticalWallSize, verticalWallSize / 2, GameConfig.Walls.Color);
 
             AddChild(topWall);
             AddChild(leftWall);
             AddChild(rightWall);
         }
+        #endregion
     }
 }
