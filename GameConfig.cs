@@ -30,9 +30,11 @@ namespace Breakout
             public static readonly Vector2 Size = new Vector2(100, 20);
             public static readonly Color Color = new Color(0, 1, 0, 1);
             public const float Speed = 600f;
+
             // Bounds calculated to keep paddle within walls: MinX at left wall, MaxX keeps paddle right edge at right wall
             public static readonly float MinX = WallThickness;
             public static readonly float MaxX = ViewportWidth - WallThickness - Size.X;
+
             public const int CollisionLayer = 1;
             public const int CollisionMask = 1;
         }
@@ -43,10 +45,13 @@ namespace Breakout
             public static readonly Vector2 Size = new Vector2(20, 20);
             public static readonly Vector2 Velocity = new Vector2(200, 200);
             public static readonly Color Color = new Color(1, 1, 0, 1);
+
             // Bounce margins: ball center (radius) relative to wall positions
             public static readonly float BounceMarginX = Size.X / 2; // Ball radius (10)
             public static readonly float BounceMarginTop = Size.Y / 2; // Ball radius (10)
+
             public const float OutOfBoundsY = 600f;
+
             public const int CollisionLayer = 1;
             public const int CollisionMask = 1;
         }
