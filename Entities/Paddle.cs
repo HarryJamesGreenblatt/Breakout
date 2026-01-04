@@ -1,30 +1,16 @@
 using Godot;
 
-
 namespace Breakout.Entities
 {
     /// <summary>
     /// Paddle entity controlled by player input (left/right arrow keys).
-    /// Parametrized for position, size, and color.
+    /// Uses GameConfig for physics constants and bounds.
     /// </summary>
     public partial class Paddle : Area2D
     {
-
-        #region Physics Properties
-        private Vector2 speed = new Vector2(600, 0);
-        private float minX = 50;
-        private float maxX = 750;
-        #endregion
-
-        /// <summary>
-        ///  Default constructor for Paddle entity.
-        /// </summary>
-        /// <param name="position"></param>
-        /// <param name="size"></param>
-        /// <param name="color"></param>
-        #region Constructor
         public Paddle(Vector2 position, Vector2 size, Color color)
         {
+            Name = "Paddle";
             Position = position;
 
             // Collision shape
@@ -39,12 +25,14 @@ namespace Breakout.Entities
                 Color = color
             };
             AddChild(visual);
+
+            // Collision setup from config
+            CollisionLayer = GameConfig.Paddle.CollisionLayer;
+            CollisionMask = GameConfig.Paddle.CollisionMask;
         }
-        #endregion
 
         public override void _Ready()
         {
-            // Lifecycle setup (if needed in future)
         }
 
         /// <summary>
@@ -57,11 +45,11 @@ namespace Breakout.Entities
             var input = Input.GetAxis("ui_left", "ui_right");
             
             // Update position
-            Position += speed * input * (float)delta;
+            Position += new Vector2((float)(GameConfig.Paddle.Speed * input * delta), 0);
             
             // Constrain to bounds
             Position = new Vector2(
-                Mathf.Clamp(Position.X, minX, maxX),
+                Mathf.Clamp(Position.X, GameConfig.Paddle.MinX, GameConfig.Paddle.MaxX),
                 Position.Y
             );
         }

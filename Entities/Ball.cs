@@ -55,8 +55,11 @@ namespace Breakout.Entities
                 Color = color
             };
             AddChild(visual);
+
+            // Collision setup from config
+            CollisionLayer = GameConfig.Ball.CollisionLayer;
+            CollisionMask = GameConfig.Ball.CollisionMask;
         }
-        #endregion
 
         /// <summary>
         /// Sets up the ball entity by connecting collision signals.
@@ -77,19 +80,19 @@ namespace Breakout.Entities
             Position += velocity * (float)delta;
 
             // Bounce off left/right walls
-            if (Position.X < 10 || Position.X > 790)
+            if (Position.X < GameConfig.Ball.BounceMarginX || Position.X > GameConfig.ViewportWidth - GameConfig.Ball.BounceMarginX)
             {
                 velocity.X = -velocity.X;
             }
 
             // Bounce off ceiling
-            if (Position.Y < 10)
+            if (Position.Y < GameConfig.Ball.BounceMarginTop)
             {
                 velocity.Y = -velocity.Y;
             }
 
-            // Out of bounds (below paddle) — game over
-            if (Position.Y > 600)
+            // Out of bounds (below paddle)
+            if (Position.Y > GameConfig.Ball.OutOfBoundsY)
             {
                 EmitSignal(SignalName.BallOutOfBounds);
                 ResetBall();
