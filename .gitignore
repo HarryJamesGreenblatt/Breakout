@@ -1,0 +1,9 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Context/notes (local development reference)
+.context/
+
+# Visual Studio cache
+.vs/
