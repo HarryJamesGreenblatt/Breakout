@@ -12,7 +12,47 @@ namespace Breakout.Game
     public partial class Orchestrator : Node2D
     {
         #region Game State
+
+        /// <summary>
+        /// A dictionary to hold the brick grid.
+        /// </summary>
         private Dictionary<int, Brick> brickGrid = new();
+
+        #region Brick Grid Management
+        /// <summary>
+        /// Creates the brick grid based on Config settings.
+        /// Bricks are stored in a dictionary keyed by unique ID for easy removal.
+        /// </summary>
+        private void InstantiateBrickGrid()
+        {
+            int brickId = 0;
+            Vector2 gridStart = Config.Brick.GridStartPosition;
+
+            for (int row = 0; row < Config.Brick.GridRows; row++)
+            {
+                for (int col = 0; col < Config.Brick.GridColumns; col++)
+                {
+                    Vector2 position = gridStart + new Vector2(
+                        col * Config.Brick.GridSpacingX,
+                        row * Config.Brick.GridSpacingY
+                    );
+
+                    // Get brick color for this row and fetch its config
+                    BrickColor brickColorEnum = BrickColorDefinitions.GetColorForRow(row);
+                    BrickColorConfig colorConfig = BrickColorDefinitions.GetConfig(brickColorEnum);
+
+                    var brick = new Brick(brickId, position, Config.Brick.Size, colorConfig.VisualColor);
+
+                    AddChild(brick);
+                    brickGrid[brickId] = brick;
+                    brickId++;
+                }
+            }
+
+            GD.Print($"Brick grid instantiated: {brickId} bricks");
+        }
+        #endregion
+
         #endregion
 
         #region Game Loop
@@ -55,41 +95,6 @@ namespace Breakout.Game
         public override void _Process(double delta)
         {
             // Main game loop (future: game state, scoring, etc.)
-        }
-        #endregion
-
-        #region Brick Grid Management
-        /// <summary>
-        /// Creates the brick grid based on Config settings.
-        /// Bricks are stored in a dictionary keyed by unique ID for easy removal.
-        /// </summary>
-        private void InstantiateBrickGrid()
-        {
-            int brickId = 0;
-            Vector2 gridStart = Config.Brick.GridStartPosition;
-
-            for (int row = 0; row < Config.Brick.GridRows; row++)
-            {
-                for (int col = 0; col < Config.Brick.GridColumns; col++)
-                {
-                    Vector2 position = gridStart + new Vector2(
-                        col * Config.Brick.GridSpacingX,
-                        row * Config.Brick.GridSpacingY
-                    );
-
-                    // Get brick color for this row and fetch its config
-                    BrickColor brickColorEnum = BrickColorDefinitions.GetColorForRow(row);
-                    BrickColorConfig colorConfig = BrickColorDefinitions.GetConfig(brickColorEnum);
-
-                    var brick = new Brick(brickId, position, Config.Brick.Size, colorConfig.VisualColor);
-
-                    AddChild(brick);
-                    brickGrid[brickId] = brick;
-                    brickId++;
-                }
-            }
-
-            GD.Print($"Brick grid instantiated: {brickId} bricks");
         }
         #endregion
 

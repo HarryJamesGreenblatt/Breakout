@@ -26,7 +26,8 @@ Rather than providing complete code, this project **implements features iterativ
 - **Entities:** Paddle (player-controlled), Ball (physics-driven), Brick Grid (8×8, destructible), Walls (boundary)
 - **Gameplay:** Ball bounces off walls, paddle, and bricks; bricks destroyed on contact
 - **Collision Detection:** Signal-based (`AreaEntered`/`AreaExited` events) instead of polling
-- **Configuration:** Centralized in `GameConfig.cs`; dynamic brick grid spacing
+- **Configuration:** Centralized in `Config.cs`; dynamic brick grid spacing
+- **Brick Colors:** Type-safe enum with scoring metadata (Red=7pts, Orange=5pts, Green=3pts, Yellow=1pt)
 - **Architecture:** Self-contained entities communicating via Godot Signals (Observer pattern)
 
 ### Not Yet Implemented
@@ -73,8 +74,9 @@ dotnet build
 ```
 
 ### Key Files
-
-- **GameOrchestrator.cs** — Main orchestration; creates entities and wires signals
+- **Game/Orchestrator.cs** — Main orchestration; creates entities and wires signals
+- **Game/Config.cs** — All constants; dynamic layout logic
+- **Game/BrickColor.cs** — Brick color enum, scoring config, and row-to-color mapping
 - **Entities/Ball.cs** — Physics, collision detection, bounce logic
 - **Entities/Paddle.cs** — Input handling, movement constraints
 - **Entities/Brick.cs** — Brick state, destruction signals
@@ -150,7 +152,21 @@ docs: documentation
 | Object Pool | https://gameprogrammingpatterns.com/object-pool.html | Brick grid Dictionary |
 
 ---
+Recent Improvements
 
+### BrickColor Enum Refactor (Latest)
+
+Introduced type-safe color handling:
+- `BrickColor` enum (Red, Orange, Green, Yellow) replaces hardcoded array indices
+- `BrickColorConfig` struct bundles color, visual representation, and scoring
+- `BrickColorDefinitions` helper with `GetColorForRow()` and `GetConfig()` for easy lookup
+- Canonical Breakout scoring now defined: Red=7pts, Orange=5pts, Green=3pts, Yellow=1pt
+
+**Impact:** Clean foundation for scoring system implementation. No duplicate color definitions. Easy to extend with new color properties.
+
+---
+
+## 
 ## Next Session: Recommended Focus
 
 ### Option A: Refactor to Components (Recommended)
