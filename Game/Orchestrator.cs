@@ -2,6 +2,7 @@ using Godot;
 using Breakout.Entities;
 using Breakout.Infrastructure;
 using Breakout.Models;
+using Breakout.Services;
 using System.Collections.Generic;
 
 namespace Breakout.Game
@@ -29,23 +30,30 @@ namespace Breakout.Game
             int brickId = 0;
             Vector2 gridStart = Config.Brick.GridStartPosition;
 
+            // iteratting through each row in the grid
             for (int row = 0; row < Config.Brick.GridRows; row++)
             {
+                // iterating through each column in the grid
                 for (int col = 0; col < Config.Brick.GridColumns; col++)
                 {
+                    // Calculate brick position
                     Vector2 position = gridStart + new Vector2(
                         col * Config.Brick.GridSpacingX,
                         row * Config.Brick.GridSpacingY
                     );
 
                     // Get brick color for this row and fetch its config
-                    BrickColor brickColorEnum = BrickColorDefinitions.GetColorForRow(row);
-                    BrickColorConfig colorConfig = BrickColorDefinitions.GetConfig(brickColorEnum);
+                    BrickColor brickColorEnum = BrickColorService.GetColorForRow(row);
+                    BrickColorConfig colorConfig = BrickColorService.GetConfig(brickColorEnum);
 
+                    // Create and add brick to the scene
                     var brick = new Brick(brickId, position, Config.Brick.Size, colorConfig.VisualColor);
-
                     AddChild(brick);
+
+                    // Store brick in the dictionary
                     brickGrid[brickId] = brick;
+
+                    // Increment brick ID for next brick
                     brickId++;
                 }
             }

@@ -1,5 +1,4 @@
 using Godot;
-using Breakout.Models;
 
 namespace Breakout.Game
 {
