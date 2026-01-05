@@ -82,21 +82,6 @@ namespace Breakout.Game
                 return new Vector2(brickWidth, 15f);
             }
 
-            // Colors: red, orange, green, yellow (top to bottom)
-            // Original: 8 rows, 2 rows each color. From BOTTOM UP: yellow, green, orange, red
-            // Since our grid renders top-to-bottom (row 0 at top, row 7 at bottom), reverse the order
-            public static readonly Color[] RowColors = new Color[]
-            {
-                new Color(1, 0, 0, 1),      // Red (rows 0-1, top)
-                new Color(1, 0, 0, 1),
-                new Color(1, 0.65f, 0, 1), // Orange (rows 2-3)
-                new Color(1, 0.65f, 0, 1),
-                new Color(0, 1, 0, 1),      // Green (rows 4-5)
-                new Color(0, 1, 0, 1),
-                new Color(1, 1, 0, 1),      // Yellow (rows 6-7, bottom)
-                new Color(1, 1, 0, 1),
-            };
-
             public const int CollisionLayer = 1;
             public const int CollisionMask = 1;
         }

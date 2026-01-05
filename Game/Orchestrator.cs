@@ -60,7 +60,7 @@ namespace Breakout.Game
 
         #region Brick Grid Management
         /// <summary>
-        /// Creates the brick grid based on GameConfig settings.
+        /// Creates the brick grid based on Config settings.
         /// Bricks are stored in a dictionary keyed by unique ID for easy removal.
         /// </summary>
         private void InstantiateBrickGrid()
@@ -77,8 +77,11 @@ namespace Breakout.Game
                         row * Config.Brick.GridSpacingY
                     );
 
-                    Color color = Config.Brick.RowColors[row];
-                    var brick = new Brick(brickId, position, Config.Brick.Size, color);
+                    // Get brick color for this row and fetch its config
+                    BrickColor brickColorEnum = BrickColorDefinitions.GetColorForRow(row);
+                    BrickColorConfig colorConfig = BrickColorDefinitions.GetConfig(brickColorEnum);
+
+                    var brick = new Brick(brickId, position, Config.Brick.Size, colorConfig.VisualColor);
 
                     AddChild(brick);
                     brickGrid[brickId] = brick;
