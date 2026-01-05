@@ -69,13 +69,17 @@ namespace Breakout.Components
             // Bounce off left wall (inner edge at x=0)
             if (ballPosition.X + ballRadius < 0)
             {
-                Velocity.X = -Velocity.X;
+                var vel = Velocity;
+                vel.X = -vel.X;
+                Velocity = vel;
                 GD.Print("Bounce off left wall");
             }
             // Bounce off right wall (inner edge at x=ViewportWidth)
             else if (ballPosition.X + ballRadius > Config.ViewportWidth)
             {
-                Velocity.X = -Velocity.X;
+                var vel = Velocity;
+                vel.X = -vel.X;
+                Velocity = vel;
                 GD.Print("Bounce off right wall");
             }
         }
@@ -92,7 +96,9 @@ namespace Breakout.Components
             // Bounce off ceiling (inner edge at y=0)
             if (ballPosition.Y + ballRadius < 0)
             {
-                Velocity.Y = -Velocity.Y;
+                var vel = Velocity;
+                vel.Y = -vel.Y;
+                Velocity = vel;
                 GD.Print("Bounce off top wall");
             }
         }
@@ -105,44 +111,52 @@ namespace Breakout.Components
         /// </summary>
         public void HandlePaddleBounce()
         {
-            Velocity.Y = -Velocity.Y;
+            var vel = Velocity;
+            vel.Y = -vel.Y;
+            Velocity = vel;
             GD.Print("Bounce off paddle");
         }
 
         /// <summary>
         /// Applies angle variation based on where the ball hit the paddle.
-        /// Ball hits center of paddle → straight bounce.
-        /// Ball hits left/right edge of paddle → angle increases.
+        /// Ball hits center of paddle → straight bounce upward.
+        /// Ball hits left edge of paddle → bounces left and upward.
+        /// Ball hits right edge of paddle → bounces right and upward.
         /// 
-        /// Future: Incorporate paddle velocity to impart angle on the ball.
+        /// This creates directional steering from the paddle.
+        /// Boost velocity to make paddle bounces feel impactful.
         /// </summary>
         /// <param name="ballCenter">Center position of the ball</param>
         /// <param name="paddleCenter">Center position of the paddle</param>
         /// <param name="paddleSize">Dimensions of the paddle</param>
         public void ApplyPaddleAngledBounce(Vector2 ballCenter, Vector2 paddleCenter, Vector2 paddleSize)
         {
-            // Delta between ball and paddle centers
+            // Delta between ball and paddle centers (normalized to -1...+1)
             Vector2 delta = ballCenter - paddleCenter;
-
-            // Normalize horizontal distance: -1 (left edge) to +1 (right edge)
             float normalizedX = delta.X / (paddleSize.X / 2);
             normalizedX = Mathf.Clamp(normalizedX, -1f, 1f);
 
-            // Apply angle: edge hits increase Y velocity slightly, reducing X
-            // This creates a curve: center hit is straight up, edge hits curve outward
-            const float maxAngle = 30f; // Max angle in degrees
-            float angleRad = Mathf.DegToRad(maxAngle * normalizedX);
+            // Direct velocity manipulation for stronger steering effect
+            float speedMagnitude = Velocity.Length();
 
-            // Rotate velocity vector by angle
-            float cosA = Mathf.Cos(angleRad);
-            float sinA = Mathf.Sin(angleRad);
-            Vector2 rotated = new Vector2(
-                Velocity.X * cosA - Velocity.Y * sinA,
-                Velocity.X * sinA + Velocity.Y * cosA
-            );
+            var vel = Velocity;
+            
+            // Ensure upward bounce: always make Y negative (upward in Godot)
+            vel.Y = -Mathf.Abs(vel.Y);
 
-            Velocity = rotated;
-            GD.Print($"Angled bounce off paddle: angle={Mathf.RadToDeg(angleRad):F1}°, vel={Velocity}");
+            // Impart horizontal steering based on paddle contact point
+            // Left edge: -maxSteer * speedMagnitude
+            // Right edge: +maxSteer * speedMagnitude
+            // Center: no additional steering
+            const float maxSteerFactor = 0.6f;  // How much to steer (0.6 = 60% speed added horizontally)
+            vel.X = speedMagnitude * maxSteerFactor * normalizedX;
+
+            // Boost velocity magnitude for impactful bounce (10% faster)
+            const float bounceBoost = 1.1f;
+            vel = vel.Normalized() * (speedMagnitude * bounceBoost);
+
+            Velocity = vel;
+            GD.Print($"Paddle bounce: contact={normalizedX:F2} (left=-1, center=0, right=+1), vel={Velocity}");
         }
         #endregion
 
@@ -150,8 +164,6 @@ namespace Breakout.Components
         /// <summary>
         /// Handles bounce off brick using penetration heuristic.
         /// Determines which edge (top, bottom, left, right) was hit based on smallest overlap.
-        /// 
-        /// Future: Could enhance with brick-specific properties (deflection, damage multipliers).
         /// </summary>
         /// <param name="ballCenter">Center of the ball</param>
         /// <param name="brickCenter">Center of the brick</param>
@@ -176,13 +188,17 @@ namespace Breakout.Components
             if (minOverlap == overlapTop || minOverlap == overlapBottom)
             {
                 // Hit top or bottom edge
-                Velocity.Y = -Velocity.Y;
+                var vel = Velocity;
+                vel.Y = -vel.Y;
+                Velocity = vel;
                 GD.Print("Bounce off brick (vertical)");
             }
             else
             {
                 // Hit left or right edge
-                Velocity.X = -Velocity.X;
+                var vel = Velocity;
+                vel.X = -vel.X;
+                Velocity = vel;
                 GD.Print("Bounce off brick (horizontal)");
             }
         }

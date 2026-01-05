@@ -1,6 +1,7 @@
 using Breakout.Game;
 using Breakout.Components;
 using Godot;
+using System.Collections.Generic;
 
 namespace Breakout.Entities
 {
@@ -34,6 +35,13 @@ namespace Breakout.Entities
         /// Initial position for reset.
         /// </summary>
         private Vector2 initialPosition;
+
+        /// <summary>
+        /// Track active collisions to prevent bouncing multiple times in same contact.
+        /// Uses signal-based state: collision tracked when AreaEntered, removed when AreaExited.
+        /// Only bounce on transition to "new contact" (not already in contact list).
+        /// </summary>
+        private HashSet<Node> activeCollisions = new();
         #endregion
 
         #region Constructor
@@ -106,15 +114,19 @@ namespace Breakout.Entities
 
         /// <summary>
         /// Handles paddle collision when the ball enters the paddle's area.
-        /// Fires only once per contact due to AreaEntered signal semantics.
+        /// Uses signal-based state tracking: only bounce on NEW contact (transition from no-contact → contact).
+        /// Contact is tracked in activeCollisions set; cleared on area_exited.
         /// </summary>
         private void _OnAreaEntered(Area2D area)
         {
+            // Only process bounce if this is a NEW contact (not already being tracked)
+            if (activeCollisions.Contains(area)) return;
+            activeCollisions.Add(area);
+
             if (area is Paddle paddle)
             {
-                physics.HandlePaddleBounce();
-                
                 // Apply angled bounce based on paddle contact point
+                // (ApplyPaddleAngledBounce handles Y reversal internally)
                 Vector2 ballCenter = Position + Config.Ball.Size / 2;
                 Vector2 paddleCenter = paddle.Position + paddle.GetSize() / 2;
                 physics.ApplyPaddleAngledBounce(ballCenter, paddleCenter, paddle.GetSize());
@@ -123,6 +135,7 @@ namespace Breakout.Entities
             }
             else if (area is Brick brick)
             {
+                GD.Print("[Ball] BRICK BOUNCE TRIGGERED");
                 // Delegate brick bounce to physics component
                 Vector2 ballCenter = Position + Config.Ball.Size / 2;
                 Vector2 brickCenter = brick.Position + brick.GetBrickSize() / 2;
@@ -131,15 +144,12 @@ namespace Breakout.Entities
         }
 
         /// <summary>
-        /// Handles paddle exit—used to reset collision state (for future multi-paddle scenarios).
+        /// Handles collision exit—clears contact tracking to allow bounces on re-entry.
+        /// Following Godot's signal-based pattern: use area_exited to track state.
         /// </summary>
         private void _OnAreaExited(Area2D area)
         {
-            // Currently unused, but signals clean separation from paddle
-            if (area is Paddle)
-            {
-                // Ball has left paddle contact
-            }
+            activeCollisions.Remove(area);
         }
 
         /// <summary>

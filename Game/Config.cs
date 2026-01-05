@@ -43,7 +43,7 @@ namespace Breakout.Game
         {
             public static readonly Vector2 Position = new Vector2(400, 300);
             public static readonly Vector2 Size = new Vector2(20, 20);
-            public static readonly Vector2 Velocity = new Vector2(200, 200);
+            public static readonly Vector2 Velocity = new Vector2(210, 200);
             public static readonly Color Color = new Color(1, 1, 0, 1);
 
             // Bounce margins: ball center (radius) relative to wall positions
