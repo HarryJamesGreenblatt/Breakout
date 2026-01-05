@@ -1,4 +1,5 @@
 using Breakout.Game;
+using Breakout.Components;
 using Godot;
 
 namespace Breakout.Entities
@@ -23,9 +24,15 @@ namespace Breakout.Entities
         public delegate void BallOutOfBoundsEventHandler();
         #endregion
 
-        #region Physics Properties
-        private Vector2 velocity;
-        private Vector2 initialVelocity;
+        #region Physics
+        /// <summary>
+        /// Physics component handles all velocity state and bounce logic.
+        /// </summary>
+        private PhysicsComponent physics;
+
+        /// <summary>
+        /// Initial position for reset.
+        /// </summary>
         private Vector2 initialPosition;
         #endregion
 
@@ -41,8 +48,9 @@ namespace Breakout.Entities
         {
             Position = position; // Top-left corner, like everything else
             initialPosition = position;
-            this.initialVelocity = initialVelocity;
-            velocity = initialVelocity;
+
+            // Initialize physics component with velocity and ball size
+            physics = new PhysicsComponent(initialVelocity, size);
 
             // Collision shape offset to center of the visual rect
             var collisionShape = new CollisionShape2D();
@@ -81,26 +89,12 @@ namespace Breakout.Entities
         /// <param name="delta"></param>
         public override void _Process(double delta)
         {
-            // Update position based on velocity
-            Position += velocity * (float)delta;
+            // Update position based on physics component's velocity
+            Position = physics.UpdatePosition(Position, (float)delta);
 
-            float ballRadius = Config.Ball.Size.X / 2;
-            
-            // Bounce off left/right walls (walls now positioned outside viewport at x=0 and x=ViewportWidth)
-            if (Position.X + ballRadius < 0)
-            {
-                velocity.X = -velocity.X;
-            }
-            else if (Position.X + ballRadius > Config.ViewportWidth)
-            {
-                velocity.X = -velocity.X;
-            }
-
-            // Bounce off ceiling (wall now positioned outside viewport at y=-WallThickness)
-            if (Position.Y + ballRadius < 0)
-            {
-                velocity.Y = -velocity.Y;
-            }
+            // Handle wall collisions via physics component
+            physics.HandleWallBounceX(Position);
+            physics.HandleWallBounceY(Position);
 
             // Out of bounds (below paddle)
             if (Position.Y > Config.Ball.OutOfBoundsY)
@@ -116,41 +110,23 @@ namespace Breakout.Entities
         /// </summary>
         private void _OnAreaEntered(Area2D area)
         {
-            if (area is Paddle)
+            if (area is Paddle paddle)
             {
-                velocity.Y = -velocity.Y;
+                physics.HandlePaddleBounce();
+                
+                // Apply angled bounce based on paddle contact point
+                Vector2 ballCenter = Position + Config.Ball.Size / 2;
+                Vector2 paddleCenter = paddle.Position + paddle.GetSize() / 2;
+                physics.ApplyPaddleAngledBounce(ballCenter, paddleCenter, paddle.GetSize());
+                
                 EmitSignal(SignalName.BallHitPaddle);
             }
             else if (area is Brick brick)
             {
-                // Bounce logic based on which edge of the brick was hit
-                // Get ball and brick bounds
+                // Delegate brick bounce to physics component
                 Vector2 ballCenter = Position + Config.Ball.Size / 2;
-                Vector2 brickSize = brick.GetBrickSize();
-                Vector2 brickCenter = brick.Position + brickSize / 2;
-                
-                // Calculate which edge is closest
-                Vector2 delta = ballCenter - brickCenter;
-                float overlapLeft = (brickSize.X / 2) + (Config.Ball.Size.X / 2) + delta.X;
-                float overlapRight = (brickSize.X / 2) + (Config.Ball.Size.X / 2) - delta.X;
-                float overlapTop = (brickSize.Y / 2) + (Config.Ball.Size.Y / 2) + delta.Y;
-                float overlapBottom = (brickSize.Y / 2) + (Config.Ball.Size.Y / 2) - delta.Y;
-                
-                // Find the smallest overlap to determine which edge was hit
-                float minOverlap = Mathf.Min(Mathf.Min(overlapLeft, overlapRight), Mathf.Min(overlapTop, overlapBottom));
-                
-                if (minOverlap == overlapTop || minOverlap == overlapBottom)
-                {
-                    // Hit top or bottom edge
-                    velocity.Y = -velocity.Y;
-                    GD.Print($"Bounce off brick (vertical)");
-                }
-                else
-                {
-                    // Hit left or right edge
-                    velocity.X = -velocity.X;
-                    GD.Print($"Bounce off brick (horizontal)");
-                }
+                Vector2 brickCenter = brick.Position + brick.GetBrickSize() / 2;
+                physics.HandleBrickBounce(ballCenter, brickCenter, brick.GetBrickSize());
             }
         }
 
@@ -174,7 +150,7 @@ namespace Breakout.Entities
         private void ResetBall()
         {
             Position = initialPosition;
-            velocity = initialVelocity;
+            physics.ResetVelocity();
         }
         #endregion
     }

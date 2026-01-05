@@ -9,10 +9,13 @@ namespace Breakout.Entities
     /// </summary>
     public partial class Paddle : Area2D
     {
+        private Vector2 size;
+
         public Paddle(Vector2 position, Vector2 size, Color color)
         {
             Name = "Paddle";
             Position = position;
+            this.size = size;
 
             // Collision shape offset to center of the visual rect
             var collisionShape = new CollisionShape2D();
@@ -55,5 +58,10 @@ namespace Breakout.Entities
                 Position.Y
             );
         }
+
+        /// <summary>
+        /// Returns the size of the paddle.
+        /// </summary>
+        public Vector2 GetSize() => size;
     }
 }
