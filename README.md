@@ -24,19 +24,18 @@ Rather than providing complete code, this project **implements features iterativ
 ### MVP (Objective 1.1 Complete ✅)
 
 - **Entities:** Paddle (player-controlled), Ball (physics-driven), Brick Grid (8×8, destructible), Walls (boundary)
-- **Gameplay:** Ball bounces off walls, paddle, and bricks; bricks destroyed on contact; speed increases and paddle shrinking working
+- **Gameplay:** Ball bounces off walls, paddle, and bricks; bricks destroyed on contact; speed increases (4, 12 hit milestones) working; paddle shrinking working
 - **Collision Detection:** Signal-based (`AreaEntered`/`AreaExited` events) instead of polling
-- **Components:** PhysicsComponent (ball physics), GameStateComponent (rules & state), BrickGridComponent (grid management), EntityComponent (factory)
+- **Components:** PhysicsComponent (ball physics, speed multipliers), GameStateComponent (rules & state), BrickGridComponent (grid management), EntityComponent (factory)
 - **Configuration:** Centralized in `Config.cs`; dynamic brick grid spacing
 - **Brick Colors:** Type-safe enum with scoring metadata (Red=7pts, Orange=5pts, Green=3pts, Yellow=1pt)
-- **Architecture:** Nystrom's Component Pattern — plain C# components own state & logic; thin entities forward events; pure signal wiring
+- **Architecture:** Nystrom's Component Pattern — plain C# components own state & logic; thin entities forward events; pure signal wiring; direct component access
 
 ### Not Yet Implemented
 
-- Scoring system
-- Speed increases (4, 12 hit milestones)
-- Paddle shrinking
-- Lives / game state machine
+- Scoring display UI
+- Lives display UI
+- Game state machine (Playing, GameOver, Level Complete)
 - Level progression
 
 ---
@@ -71,7 +70,8 @@ Rather than providing complete code, this project **implements features iterativ
 Brick destroyed → BrickGridComponent emits BrickDestroyedWithColor
                   ↓
                   GameStateComponent.OnBrickDestroyed() checks milestones
-                  ├─ Emits SpeedIncreaseRequired → Controller wires to Ball.ApplySpeedMultiplier()
+                  ├─ Emits SpeedIncreaseRequired → Controller wires DIRECTLY to PhysicsComponent.ApplySpeedMultiplier()
+                  │  (no indirection through Ball!)
                   └─ Emits PaddleShrinkRequired → Controller wires to Paddle.Shrink()
 ```
 
@@ -92,13 +92,13 @@ dotnet build
 ```
 
 ### Key Files
-- **Game/Controller.cs** — Pure signal wiring and instantiation; zero business logic
+- **Game/Controller.cs** — Pure signal wiring and instantiation via EntityComponent; zero business logic
 - **Game/Config.cs** — All constants; dynamic layout logic
-- **Game/EntityComponent.cs** — Factory component; creates entity-component pairs and manages scene tree
-- **Components/PhysicsComponent.cs** — Ball physics, collision tracking, speed multipliers
-- **Components/GameStateComponent.cs** — Game rules, score, lives, speed/shrink logic
+- **Components/EntityComponent.cs** — Factory component; creates entity-component pairs and manages scene tree instantiation
+- **Components/PhysicsComponent.cs** — Ball physics, collision tracking, speed multipliers; direct target of Controller wiring
+- **Components/GameStateComponent.cs** — Game rules, score, lives, speed/shrink logic; emits events for Controller to wire
 - **Components/BrickGridComponent.cs** — Brick grid management and destruction tracking
-- **Entities/Ball.cs** — Thin entity; delegates to PhysicsComponent; forwards signals
+- **Entities/Ball.cs** — Thin entity; delegates physics to PhysicsComponent; exposes component via GetPhysicsComponent()
 - **Entities/Paddle.cs** — Input handling, movement, shrink action
 - **Entities/Brick.cs** — Collision detector, destruction signal
 - **Infrastructure/Walls.cs** — Boundary walls (positioned outside viewport)
@@ -178,26 +178,32 @@ docs: documentation
 
 ## Recent Improvements
 
-### Session 2: Full Component Pattern Refactor (January 5, 2026)
+### Session 2: Full Component Pattern Refinement (January 5, 2026)
 
-Refactored from "signals only" to true **Nystrom's Component Pattern**:
+**Phase 1-6:** Refactored from "signals only" to true **Nystrom's Component Pattern**:
 - Created `PhysicsComponent` (ball physics, collision tracking, speed multipliers)
 - Created `GameStateComponent` (game rules, score, lives, speed/shrink logic)
 - Created `BrickGridComponent` (grid management, destruction handling)
-- Created `EntityComponent` (factory for entity-component pair instantiation)
 - Renamed `GameOrchestrator` → `Controller` (accurate naming: dumb wiring)
 - Eliminated all state duplication (e.g., shrink logic was in 2 places, now in 1)
 - Controller reduced from 100+ lines with decisions to ~50 lines of pure wiring
 
-**Achieved:**
+**Phase 7:** Eliminated unnecessary pass-through method indirection:
+- Discovered `Ball.ApplySpeedMultiplier()` was a pass-through to `PhysicsComponent`
+- Violated principle: behavior owner (PhysicsComponent) should be wired directly
+- Created `EntityComponent.CreateBallWithPhysics()` returning `(Ball, PhysicsComponent)` tuple
+- Updated Controller to wire `SpeedIncreaseRequired` directly to `PhysicsComponent.ApplySpeedMultiplier()`
+- Removed `Ball.ApplySpeedMultiplier()` pass-through; added `Ball.GetPhysicsComponent()`
+
+**Result:**
 - ✅ Components own state AND logic (not just data containers)
-- ✅ Entities are thin; they forward events
-- ✅ Controller is mechanical signal wiring only
+- ✅ Entities are thin; they forward events only
+- ✅ Controller is mechanical signal wiring only (zero state, zero decisions)
+- ✅ **No indirection**: all signals wired directly to behavior owners
 - ✅ Speed multipliers persist across ball resets
 - ✅ Paddle shrinks exactly once (via flag guard)
 - ✅ No state polling; pure event-driven
-
-**Impact:** Architecture is solid and scalable. Ready for Objective 2.1 (scoring/lives UI) without further refactoring.
+- ✅ **Architecture is solid, complete, and ready for feature development**
 
 ---
 
