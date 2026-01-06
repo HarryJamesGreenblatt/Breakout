@@ -45,23 +45,6 @@ namespace Breakout.Components
         }
 
         /// <summary>
-        /// Create the ball entity and add to scene tree.
-        /// </summary>
-        /// <param name="parent">Parent node to attach ball to.</param>
-        /// <returns>Instantiated Ball entity.</returns>
-        public Ball CreateBall(Node parent)
-        {
-            var ball = new Ball(
-                Config.Ball.Position,
-                Config.Ball.Size,
-                Config.Ball.Velocity,
-                Config.Ball.Color
-            );
-            parent.AddChild(ball);
-            return ball;
-        }
-
-        /// <summary>
         /// Create the walls infrastructure and add to scene tree.
         /// </summary>
         /// <param name="parent">Parent node to attach walls to.</param>
@@ -83,6 +66,24 @@ namespace Breakout.Components
             var brickGrid = new BrickGridComponent();
             brickGrid.InstantiateGrid(parent);
             return brickGrid;
+        }
+
+        /// <summary>
+        /// Create the ball entity and get its physics component.
+        /// Returns both the entity (for signals) and component (for behavior wiring).
+        /// </summary>
+        /// <param name="parent">Parent node to attach ball to.</param>
+        /// <returns>Tuple of (Ball entity, PhysicsComponent).</returns>
+        public (Ball entity, PhysicsComponent physics) CreateBallWithPhysics(Node parent)
+        {
+            var ball = new Ball(
+                Config.Ball.Position,
+                Config.Ball.Size,
+                Config.Ball.Velocity,
+                Config.Ball.Color
+            );
+            parent.AddChild(ball);
+            return (ball, ball.GetPhysicsComponent());
         }
 
         /// <summary>

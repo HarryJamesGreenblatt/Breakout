@@ -135,13 +135,12 @@ namespace Breakout.Entities
         }
 
         /// <summary>
-        /// <summary>
-        /// Applies a speed multiplier to the ball's velocity.
-        /// Called by Orchestrator when canonical speed increase rules trigger.
+        /// Exposes the physics component for direct wiring by Controller.
+        /// Allows game rules to modify physics behavior without going through Ball.
         /// </summary>
-        public void ApplySpeedMultiplier(float multiplier)
+        public PhysicsComponent GetPhysicsComponent()
         {
-            physics.ApplySpeedMultiplier(multiplier);
+            return physics;
         }
 
         #endregion
