@@ -4,7 +4,6 @@ using Breakout.Infrastructure;
 using Breakout.Models;
 using Breakout.Services;
 using Breakout.Components;
-using System.Collections.Generic;
 
 namespace Breakout.Game
 {
@@ -23,9 +22,9 @@ namespace Breakout.Game
         private GameStateComponent gameState;
 
         /// <summary>
-        /// A dictionary to hold the brick grid.
+        /// Brick grid component owns and manages the brick grid.
         /// </summary>
-        private Dictionary<int, Brick> brickGrid = new();
+        private BrickGridComponent brickGrid;
 
         /// <summary>
         /// Reference to the ball for speed control.
@@ -36,56 +35,14 @@ namespace Breakout.Game
         /// Reference to the paddle for shrinking.
         /// </summary>
         private Paddle paddle;
-
-        #region Brick Grid Management
-        /// <summary>
-        /// Creates the brick grid based on Config settings.
-        /// Bricks are stored in a dictionary keyed by unique ID for easy removal.
-        /// </summary>
-        private void InstantiateBrickGrid()
-        {
-            int brickId = 0;
-            Vector2 gridStart = Config.Brick.GridStartPosition;
-
-            // iteratting through each row in the grid
-            for (int row = 0; row < Config.Brick.GridRows; row++)
-            {
-                // iterating through each column in the grid
-                for (int col = 0; col < Config.Brick.GridColumns; col++)
-                {
-                    // Calculate brick position
-                    Vector2 position = gridStart + new Vector2(
-                        col * Config.Brick.GridSpacingX,
-                        row * Config.Brick.GridSpacingY
-                    );
-
-                    // Get brick color for this row and fetch its config
-                    BrickColor brickColorEnum = BrickColorService.GetColorForRow(row);
-                    BrickColorConfig colorConfig = BrickColorService.GetConfig(brickColorEnum);
-
-                    // Create and add brick to the scene
-                    var brick = new Brick(brickId, position, Config.Brick.Size, colorConfig.VisualColor);
-                    AddChild(brick);
-
-                    // Store brick in the dictionary
-                    brickGrid[brickId] = brick;
-
-                    // Increment brick ID for next brick
-                    brickId++;
-                }
-            }
-
-            GD.Print($"Brick grid instantiated: {brickId} bricks");
-        }
-        #endregion
-
         #endregion
 
         #region Game Loop
         public override void _Ready()
         {
-            // Instantiate game state component
+            // Instantiate components
             gameState = new GameStateComponent();
+            brickGrid = new BrickGridComponent();
 
             // Instantiate entities using GameConfig
             paddle = new Paddle(
@@ -108,22 +65,17 @@ namespace Breakout.Game
             AddChild(walls);
 
             // Instantiate brick grid
-            InstantiateBrickGrid();
+            brickGrid.InstantiateGrid(this);
 
-            // Connect game state component events to action handlers
-            gameState.SpeedIncreaseRequired += ApplySpeedIncrease;
+            // Connect component events directly to actions (pure signal coordination)
+            gameState.SpeedIncreaseRequired += ball.ApplySpeedMultiplier;
             gameState.PaddleShrinkRequired += paddle.Shrink;
+            brickGrid.BrickDestroyedWithColor += gameState.OnBrickDestroyed;
 
             // Connect ball signals to game state
             ball.BallHitPaddle += OnBallHitPaddle;
             ball.BallOutOfBounds += OnBallOutOfBounds;
             ball.BallHitCeiling += () => gameState.OnBallHitCeiling();
-
-            // Connect brick signals to game state
-            foreach (var brick in brickGrid.Values)
-            {
-                brick.BrickDestroyed += (brickId) => OnBrickDestroyed(brickId);
-            }
         }
 
         public override void _Process(double delta)
@@ -143,38 +95,6 @@ namespace Breakout.Game
         {
             GD.Print("Ball out of bounds!");
             gameState.LoseLive();
-        }
-
-        /// <summary>
-        /// Handles brick destruction by delegating to game state component.
-        /// </summary>
-        private void OnBrickDestroyed(int brickId)
-        {
-            if (brickGrid.ContainsKey(brickId))
-            {
-                // Get brick's row to determine color
-                int gridColumns = Config.Brick.GridColumns;
-                int brickRow = brickId / gridColumns;
-                BrickColor color = BrickColorService.GetColorForRow(brickRow);
-
-                brickGrid.Remove(brickId);
-
-                GD.Print($"Brick {brickId} destroyed (row {brickRow}). Remaining: {brickGrid.Count}");
-
-                // Delegate to game state component (which owns all rule logic)
-                gameState.OnBrickDestroyed(color);
-            }
-        }
-
-        /// <summary>
-        /// Applies a speed multiplier to the ball.
-        /// Called when gameState emits SpeedIncreaseRequired event.
-        /// </summary>
-        private void ApplySpeedIncrease(float multiplier)
-        {
-            if (ball != null)
-            {                ball.ApplySpeedMultiplier(multiplier);
-            }
         }
         #endregion
     }
