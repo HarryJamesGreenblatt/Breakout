@@ -141,17 +141,6 @@ namespace Breakout.Entities
         public void ApplySpeedMultiplier(float multiplier)
         {
             physics.ApplySpeedMultiplier(multiplier);
-        }
-
-        /// <summary>
-        /// Connects paddle to ceiling hit signal.
-        /// Called by Orchestrator during setup.
-        /// Wraps paddle.OnBallHitCeiling() which returns bool (did shrink).
-        /// </summary>
-        public void ConnectPaddleToCeiling(Paddle paddle)
-        {
-            BallHitCeiling += () => paddle.OnBallHitCeiling();
-        }
-        #endregion
+        }        #endregion
     }
 }

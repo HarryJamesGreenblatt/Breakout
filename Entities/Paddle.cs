@@ -6,17 +6,11 @@ namespace Breakout.Entities
     /// <summary>
     /// Paddle entity controlled by player input (left/right arrow keys).
     /// Uses GameConfig for physics constants and bounds.
+    /// Provides Shrink() action for GameStateComponent to call.
     /// </summary>
     public partial class Paddle : Area2D
     {
         private Vector2 size;
-
-        /// <summary>
-        /// Flag set when ball breaks through red row.
-        /// When set, paddle shrinks on next ceiling hit.
-        /// Only shrinks once.
-        /// </summary>
-        private bool shrinkOnCeilingHit = false;
 
         public Paddle(Vector2 position, Vector2 size, Color color)
         {
@@ -72,35 +66,11 @@ namespace Breakout.Entities
         public Vector2 GetSize() => size;
 
         /// <summary>
-        /// Sets flag to shrink paddle on next ceiling hit.
-        /// Called by Orchestrator when red row brick is destroyed.
-        /// </summary>
-        public void SetShrinkOnCeilingHit()
-        {
-            shrinkOnCeilingHit = true;
-        }
-
-        /// <summary>
-        /// Handles ceiling hit signal from ball.
-        /// If paddle is flagged to shrink, shrinks to 50% and clears flag.
-        /// Returns true if shrink occurred, false otherwise.
-        /// </summary>
-        public bool OnBallHitCeiling()
-        {
-            if (shrinkOnCeilingHit)
-            {
-                ShrinkPaddle();
-                shrinkOnCeilingHit = false;  // Only shrink once
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
         /// Shrinks the paddle to 50% of its original width.
-        /// Called when ball breaks through red row and hits ceiling (canonical Breakout rule).
+        /// Called by Orchestrator when GameStateComponent emits PaddleShrinkRequired.
+        /// This is the canonical Breakout rule: paddle shrinks after breaking red row and hitting ceiling.
         /// </summary>
-        private void ShrinkPaddle()
+        public void Shrink()
         {
             size = new Vector2(size.X * 0.5f, size.Y);
             

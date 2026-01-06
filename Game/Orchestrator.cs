@@ -112,15 +112,12 @@ namespace Breakout.Game
 
             // Connect game state component events to action handlers
             gameState.SpeedIncreaseRequired += ApplySpeedIncrease;
-            gameState.PaddleShrinkRequired += paddle.SetShrinkOnCeilingHit;
+            gameState.PaddleShrinkRequired += paddle.Shrink;
 
             // Connect ball signals to game state
             ball.BallHitPaddle += OnBallHitPaddle;
             ball.BallOutOfBounds += OnBallOutOfBounds;
             ball.BallHitCeiling += () => gameState.OnBallHitCeiling();
-
-            // Connect ball to paddle (paddle shrinks on ceiling hit)
-            ball.ConnectPaddleToCeiling(paddle);
 
             // Connect brick signals to game state
             foreach (var brick in brickGrid.Values)
