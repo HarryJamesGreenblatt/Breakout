@@ -66,5 +66,12 @@ namespace Breakout.Entities
         }
         #endregion
 
+        #region Public API
+        /// <summary>
+        /// Get the brick's size (width and height).
+        /// </summary>
+        public Vector2 GetBrickSize() => size;
+        #endregion
+
     }
 }
