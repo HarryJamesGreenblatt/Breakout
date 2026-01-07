@@ -66,36 +66,5 @@ namespace Breakout.Entities
         }
         #endregion
 
-        #region Game Behavior
-        /// <summary>
-        /// Sets up the brick by connecting collision signals.
-        /// </summary>
-        public override void _Ready()
-        {
-            AreaEntered += _OnAreaEntered;
-        }
-
-        /// <summary>
-        /// Returns the brick's size for collision calculations.
-        /// </summary>
-        public Vector2 GetBrickSize()
-        {
-            return size;
-        }
-
-        /// <summary>
-        /// Handles collision with the ball — destroy on contact.
-        /// Canonical Breakout: one hit = destruction (no health component).
-        /// </summary>
-        private void _OnAreaEntered(Area2D area)
-        {
-            if (area is Ball)
-            {
-                EmitSignal(SignalName.BrickDestroyed, brickId);
-                QueueFree();  // Schedule for deletion at end of frame
-            }
-        }
-        #endregion
     }
 }
-

@@ -1,11 +1,11 @@
 using Breakout.Models;
 
-namespace Breakout.Services
+namespace Breakout.Utilities
 {
     /// <summary>
-    /// Service for brick color configuration and lookup.
+    /// Utility for brick color configuration and lookup.
     /// </summary>
-    public static class BrickColorService
+    public static class BrickColorUtility
     {
         /// <summary>
         /// Get configuration for a given brick color.

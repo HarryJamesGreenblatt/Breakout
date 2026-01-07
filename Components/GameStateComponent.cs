@@ -181,11 +181,11 @@ namespace Breakout.Components
 
         /// <summary>
         /// Called when ball hits a brick (for scoring).
-        /// Looks up point value from BrickColorService and updates score.
+        /// Looks up point value from BrickColorUtility and updates score.
         /// </summary>
         public void AddScore(Models.BrickColor color)
         {
-            int points = Services.BrickColorService.GetConfig(color).Points;
+            int points = Utilities.BrickColorUtility.GetConfig(color).Points;
             score += points;
             ScoreChanged?.Invoke(score);
             GD.Print($"Score +{points}. Total: {score}");

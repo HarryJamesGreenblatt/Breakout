@@ -1,7 +1,7 @@
 using Godot;
 using Breakout.Entities;
 using Breakout.Models;
-using Breakout.Services;
+using Breakout.Utilities;
 using System;
 using System.Collections.Generic;
 
@@ -65,8 +65,8 @@ namespace Breakout.Components
                     );
 
                     // Get brick color for this row and fetch its config
-                    BrickColor brickColorEnum = BrickColorService.GetColorForRow(row);
-                    BrickColorConfig colorConfig = BrickColorService.GetConfig(brickColorEnum);
+                    BrickColor brickColorEnum = BrickColorUtility.GetColorForRow(row);
+                    BrickColorConfig colorConfig = BrickColorUtility.GetConfig(brickColorEnum);
 
                     // Create and add brick to the scene
                     var brick = new Brick(brickId, position, Breakout.Game.Config.Brick.Size, colorConfig.VisualColor);
@@ -104,7 +104,7 @@ namespace Breakout.Components
                 // Compute brick row to determine color
                 int gridColumns = Breakout.Game.Config.Brick.GridColumns;
                 int brickRow = brickId / gridColumns;
-                BrickColor color = BrickColorService.GetColorForRow(brickRow);
+                BrickColor color = BrickColorUtility.GetColorForRow(brickRow);
 
                 // Remove from grid
                 brickGrid.Remove(brickId);
