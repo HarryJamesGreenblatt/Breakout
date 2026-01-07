@@ -4,18 +4,16 @@ using Breakout.Game;
 namespace Breakout.Components
 {
     /// <summary>
-    /// RenderingComponent — manages all rendering concerns for the game.
+    /// UIComponent — manages HUD display (score, lives labels).
     /// 
     /// Following Nystrom's Component pattern:
-    /// - Component owns the rendering responsibility (visual presentation layer)
+    /// - Component owns the UI rendering responsibility (HUD overlay)
     /// - Listens to GameStateComponent events and updates display
-    /// - Currently: Renders score/lives UI labels
-    /// - Future: Will handle entity rendering, menus, particle effects, animations
+    /// - Responsibility: Display score and lives; react to state changes via events
     /// 
-    /// This abstracts rendering as a cohesive concern, separate from game logic.
-    /// Not just UI — it's the rendering system for all game presentation.
+    /// This is a focused UI component for HUD labels only.
     /// </summary>
-    public partial class RenderingComponent : CanvasLayer
+    public partial class UIComponent : CanvasLayer
     {
         #region UI Elements
         private Label scoreLabel;

@@ -38,18 +38,18 @@ namespace Breakout.Game
             var (ball, ballPhysics) = entityFactory.CreateBallWithPhysics(this);
             var walls = entityFactory.CreateWalls(this);  // For completeness; walls are stateless
 
-            // Instantiate rendering component (manages all visual presentation)
-            var renderingComponent = new RenderingComponent();
-            AddChild(renderingComponent);
+            // Instantiate UI component (manages HUD display of score and lives)
+            var uiComponent = new UIComponent();
+            AddChild(uiComponent);
 
             // Wire all signals directly to component behavior owners (zero indirection)
             gameState.SpeedIncreaseRequired += ballPhysics.ApplySpeedMultiplier;  // Wire to physics, not ball
             gameState.PaddleShrinkRequired += paddle.Shrink;
             brickGrid.BrickDestroyedWithColor += gameState.OnBrickDestroyed;
 
-            // Wire rendering events
-            gameState.ScoreChanged += renderingComponent.OnScoreChanged;
-            gameState.LivesChanged += renderingComponent.OnLivesChanged;
+            // Wire UI events
+            gameState.ScoreChanged += uiComponent.OnScoreChanged;
+            gameState.LivesChanged += uiComponent.OnLivesChanged;
 
             // Wire state machine (game-over detection)
             gameState.LivesChanged += (lives) => {
