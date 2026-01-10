@@ -39,6 +39,8 @@ Rather than providing complete code, this project **implements features iterativ
 
 - Level progression and level complete state
 - Ball speed cap (may need for extremely long games)
+- Replay/restart functionality
+- Proper game initialization flow (wait for player input before launch)
 
 ---
 
@@ -299,28 +301,59 @@ docs: documentation
   - `Config.Brick.ComputeBrickSize()` → references `Config.BrickGrid` for grid dimensions
 - **Benefit:** Clear separation of concerns; independent tweaking of either subsystem; one-way dependency is minimal
 
+**Phase 4: Physics Refinement & Arcade-Authentic Features (January 10)**
+- **Speed Magnitude Preservation:**
+  - Fixed speed diffusion on bounces by implementing Pythagorean magnitude preservation
+  - `HandlePaddleBounce()` now guarantees `velocity.Length() == speedMagnitude` after reconstruction
+  - Increased speed multiplier from 1.05x to 1.15x (15% per milestone) for noticeable difficulty escalation
+  - Speed multipliers now persist correctly across all bounce types (wall, paddle, brick)
+- **Paddle Speed Compensation:**
+  - Added `paddleSpeedMultiplier` to maintain fairness as ball accelerates
+  - 10% paddle speed increase at same milestones as ball speed (4, 12 hits, orange/red rows)
+  - Wired via `GameStateComponent.PaddleSpeedIncreaseRequired` event
+- **Randomized Launch Angles:**
+  - Ball reset now randomizes launch angle between 60° and 120° (downward toward paddle)
+  - Preserves accumulated speed multipliers while varying direction for replayability
+- **Color-Based Audio/Visual Feedback:**
+  - Created `SoundComponent` with 8-bit square wave synthesis
+  - Polyphonic cracking based on brick color (red=4 cracks, orange=3, green=2, yellow=1)
+  - `UIComponent` flashes score synchronized with brick color (same count)
+  - Both components subscribe to `BrickDestroyedWithColor` event (no state drilling)
+- **UI Polish:**
+  - Zero-padded 3-digit score display ("000" initialization)
+  - Game over label centered using anchor-based stretching (accounts for wall offset)
+  - Bold sans-serif arcade font for authentic feel
+- **Paddle Shrink Fix:**
+  - Fixed Godot error by using `CallDeferred()` for collision shape modification during physics query
+  - Shrink now executes correctly after red row breakthrough + ceiling hit
+  - 60% width reduction (changed from 50% for better playability)
+
 **Result:**
-- ✅ HUD displays score and lives in real-time
-- ✅ UI properly positioned without overlap
+- ✅ HUD displays score and lives in real-time with arcade-style formatting
+- ✅ UI properly positioned without overlap, centered game over message
 - ✅ Config architecture reflects distinction between entity and infrastructure
 - ✅ Brick and Grid configurations are independently maintainable
-- ✅ One-way dependency (Brick → BrickGrid) is natural and minimal
+- ✅ Speed multipliers preserved across all bounces with mathematical rigor
+- ✅ Paddle speed tracks ball speed for fair gameplay
+- ✅ Randomized launch angles improve replayability
+- ✅ Color-synchronized audio/visual feedback without state drilling
+- ✅ Deferred paddle shrink execution avoids physics query conflicts
+- ✅ **MVP is fully playable with arcade-authentic physics and polish**
 
 ---
 
-## Next Session: Objective 2.1 (Scoring & Game State UI)
+## Next Session: Future Objectives
 
-Architecture is solid and ready for feature addition. No refactoring needed.
+Architecture is solid and MVP is complete. Ready for additional features.
 
-### Recommended Tasks
-1. Create UI layer (CanvasLayer with labels)
-2. Bind `ScoreChanged` event to score label
-3. Bind `LivesChanged` event to lives label
-4. Implement game-over detection when lives reach 0
-5. Test speed increases and paddle shrinking
-6. **Time:** 2-3 hours | **Benefit:** Game is playable and testable
+### Potential Next Steps
+1. **Level Progression** — Multiple brick layouts with increasing difficulty
+2. **Ball Speed Cap** — Prevent unplayable speeds in extremely long games
+3. **Replay/Restart** — Reset game state without restarting application
+4. **Game Initialization Flow** — Wait for player input before first ball launch
+5. **Additional Power-ups** — Multi-ball, paddle extension, etc. (non-canonical)
 
-**Why architecture is ready:** Components emit all necessary events (ScoreChanged, LivesChanged, BallOutOfBounds). UI can simply listen without any architectural changes.
+**Architecture Note:** Current component pattern scales well for all these features. New functionality can be added as components with signal wiring in Controller.
 
 ---
 
