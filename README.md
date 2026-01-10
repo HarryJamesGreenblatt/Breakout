@@ -1,5 +1,7 @@
 # Breakout
 
+![Breakout Poster](https://flyers.arcade-museum.com/videogame-flyers/0/breakout-00145-01.jpg)
+
 A faithful recreation of Atari's classic *Breakout* (1976) in **Godot 4.5 with C#**, built as a hands-on learning exercise in 2D game development fundamentals and architectural patterns.
 
 **Current Status:** Objective 1.1++ complete (MVP fully playable with arcade-authentic physics and UI) — Nystrom's Component Pattern with proper speed preservation, paddle speed compensation, and color-based audio/visual feedback (January 10, 2026).
