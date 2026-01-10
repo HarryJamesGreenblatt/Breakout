@@ -40,7 +40,7 @@ namespace Breakout.Components
             scoreLabel.OffsetRight = 100; // Width constraint (~85px)
             scoreLabel.OffsetTop = 25;    // 25px from top (below ceiling)
             scoreLabel.OffsetBottom = 65;
-            scoreLabel.Text = "0";
+            scoreLabel.Text = "000";  // Initialize with 3-digit zero-padding
             scoreLabel.AddThemeFontSizeOverride("font_size", 48);
             scoreLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));  // White text
             scoreLabel.AddThemeFontOverride("font", arcadeFont);
@@ -132,14 +132,17 @@ namespace Breakout.Components
             gameOverLabel.HorizontalAlignment = HorizontalAlignment.Center;
             gameOverLabel.VerticalAlignment = VerticalAlignment.Center;
             
-            // Set size before positioning so we can calculate center correctly
-            gameOverLabel.CustomMinimumSize = new Vector2(300, 150);
+            // Stretch horizontally from left wall to right wall, center vertically
+            gameOverLabel.AnchorLeft = 0f;
+            gameOverLabel.AnchorRight = 1f;
+            gameOverLabel.AnchorTop = 0.5f;
+            gameOverLabel.AnchorBottom = 0.5f;
             
-            // Center the label by positioning it so its center is at viewport center
-            // Position is top-left corner, so we subtract half the size to center it
-            float centerX = Config.ViewportWidth / 2 - gameOverLabel.CustomMinimumSize.X / 2;
-            float centerY = Config.ViewportHeight / 2 - gameOverLabel.CustomMinimumSize.Y / 2;
-            gameOverLabel.Position = new Vector2(centerX, centerY);
+            // Offset to account for walls: start after left wall, end before right wall
+            gameOverLabel.OffsetLeft = Config.WallThickness;
+            gameOverLabel.OffsetRight = -Config.WallThickness;
+            gameOverLabel.OffsetTop = -75;
+            gameOverLabel.OffsetBottom = 75;
             
             AddChild(gameOverLabel);
 
