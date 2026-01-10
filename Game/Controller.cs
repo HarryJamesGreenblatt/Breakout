@@ -45,6 +45,10 @@ namespace Breakout.Game
             var uiComponent = new UIComponent();
             AddChild(uiComponent);
 
+            // Instantiate sound component (manages all game audio)
+            var soundComponent = new SoundComponent();
+            AddChild(soundComponent);
+
             // Wire all signals directly to component behavior owners (zero indirection)
             gameState.SpeedIncreaseRequired += ballPhysics.ApplySpeedMultiplier;  // Wire to physics, not ball
             gameState.PaddleShrinkRequired += paddle.Shrink;
@@ -52,6 +56,7 @@ namespace Breakout.Game
             // Wire brick destruction to BOTH game rules (speed/shrink) AND scoring
             brickGrid.BrickDestroyedWithColor += gameState.OnBrickDestroyed;    // Game rules (speed increases, paddle shrink)
             brickGrid.BrickDestroyedWithColor += gameState.AddScore;             // Scoring
+            brickGrid.BrickDestroyedWithColor += (color) => soundComponent.PlayBrickHit(color);  // Sound with polyphonic cracking
 
             // Wire UI events
             gameState.ScoreChanged += uiComponent.OnScoreChanged;
@@ -78,7 +83,20 @@ namespace Breakout.Game
                 OnBallOutOfBounds();
                 gameState.DecrementLives();
             };
-            ball.BallHitCeiling += () => gameState.OnBallHitCeiling();
+            ball.BallHitCeiling += () => {
+                gameState.OnBallHitCeiling();
+                soundComponent.PlayWallBounce();
+            };
+
+            // Wire Sound events
+            ball.BallHitPaddle += soundComponent.PlayPaddleHit;
+            ballPhysics.WallHit += soundComponent.PlayWallBounce;  // Side wall bounces
+            gameState.SpeedIncreaseRequired += (_) => soundComponent.PlaySpeedIncrease();
+            gameState.PaddleShrinkRequired += soundComponent.PlayPaddleShrinkEffect;  // "gaw gaw gaw" effect
+            gameState.LivesChanged += (lives) => {
+                if (lives > 0) soundComponent.PlayLivesDecremented();  // Play sound when lives decrease
+                else if (lives <= 0) soundComponent.PlayGameOver();  // Play game over sound when lives reach 0
+            };
 
             // Wire all-bricks-destroyed to level complete
             brickGrid.AllBricksDestroyed += () => {

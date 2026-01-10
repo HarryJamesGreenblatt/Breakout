@@ -37,6 +37,12 @@ namespace Breakout.Components
         /// Allows game rules to respond (e.g., paddle shrink after red row contact).
         /// </summary>
         public event System.Action CeilingHit;
+
+        /// <summary>
+        /// C# event emitted when ball bounces off left/right walls.
+        /// Allows audio to respond with wall bounce sound.
+        /// </summary>
+        public event System.Action WallHit;
         #endregion
 
         #region State
@@ -189,11 +195,13 @@ namespace Breakout.Components
             if (position.X + ballRadius < 0)
             {
                 velocity.X = -velocity.X;
+                WallHit?.Invoke();
             }
             // Bounce off right wall (inner edge at x=ViewportWidth)
             else if (position.X + ballRadius > Config.ViewportWidth)
             {
                 velocity.X = -velocity.X;
+                WallHit?.Invoke();
             }
         }
 
