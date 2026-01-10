@@ -143,14 +143,31 @@ namespace Breakout.Components
         /// <summary>
         /// Resets position and velocity to initial values.
         /// Preserves cumulative speed multiplier so speed increases persist across ball resets.
-        /// velocity = initialVelocity * currentSpeedMultiplier
+        /// Adds slight randomness to launch angle so ball doesn't always go the same direction.
+        /// velocity = initialVelocity * currentSpeedMultiplier (with angle variation)
         /// </summary>
         public void ResetPhysics()
         {
             position = initialPosition;
-            velocity = initialVelocity * currentSpeedMultiplier;
+            
+            // Get speed magnitude from current multiplier
+            float speed = initialVelocity.Length() * currentSpeedMultiplier;
+            
+            // Launch angle constrained between 60° and 120° (mostly downward toward paddle)
+            // In Godot: 0° = right, 90° = down, 180° = left, 270° = up
+            float minAngleDegrees = 60f;
+            float maxAngleDegrees = 120f;
+            float randomAngleDegrees = Mathf.Lerp(minAngleDegrees, maxAngleDegrees, (float)GD.Randf());
+            float angleRadians = Mathf.DegToRad(randomAngleDegrees);
+            
+            // Reconstruct velocity with constrained angle but same speed
+            velocity = new Vector2(
+                Mathf.Cos(angleRadians) * speed,
+                Mathf.Sin(angleRadians) * speed
+            );
+            
             activeCollisions.Clear();
-            GD.Print($"Ball reset. Speed multiplier: {currentSpeedMultiplier}x");
+            GD.Print($"Ball reset. Speed multiplier: {currentSpeedMultiplier}x, launch angle: {randomAngleDegrees:F1}°");
         }
         #endregion
 
@@ -212,23 +229,16 @@ namespace Breakout.Components
 
             // Ensure strong upward velocity for authentic feel
             // Arcade Breakout: ball leaves paddle at steep angle (~45 degrees is common)
-            velocity.Y = -Mathf.Abs(velocity.Y);
-
-            // Angle control: contact point determines X velocity component
-            // Edge hits (normalizedX near ±1) give steeper angles
-            // Center hits (normalizedX near 0) go mostly straight up
             const float maxAngleFactor = 0.7f;  // Max horizontal velocity relative to speed magnitude
-            velocity.X = speedMagnitude * maxAngleFactor * normalizedX;
+            
+            // Calculate angle components while preserving total speed magnitude
+            float horizontalComponent = speedMagnitude * maxAngleFactor * normalizedX;
+            float verticalMagnitude = Mathf.Sqrt((speedMagnitude * speedMagnitude) - (horizontalComponent * horizontalComponent));
+            
+            velocity.X = horizontalComponent;
+            velocity.Y = -verticalMagnitude;  // Negative = upward
 
-            // Paddle velocity influence: if paddle is moving, impart some of that momentum
-            // This makes catching with moving paddle feel more dynamic
-            float paddleVelocityX = paddle.GetVelocityX();
-            if (Mathf.Abs(paddleVelocityX) > 0.1f)
-            {
-                velocity.X += paddleVelocityX * 0.3f;  // 30% of paddle's horizontal momentum
-            }
-
-            GD.Print($"Paddle bounce: contact={normalizedX:F2}, paddleVel={paddleVelocityX:F2}, ballVel={velocity}");
+            GD.Print($"Paddle bounce: contact={normalizedX:F2}, speed={speedMagnitude:F2}, ballVel={velocity}, magnitude={velocity.Length():F2}");
         }
         #endregion
 

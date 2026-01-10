@@ -51,7 +51,8 @@ namespace Breakout.Game
 
             // Wire all signals directly to component behavior owners (zero indirection)
             gameState.SpeedIncreaseRequired += ballPhysics.ApplySpeedMultiplier;  // Wire to physics, not ball
-            gameState.PaddleShrinkRequired += paddle.Shrink;
+            gameState.PaddleSpeedIncreaseRequired += paddle.ApplySpeedMultiplier;  // Wire paddle speed compensation
+            gameState.PaddleShrinkRequired += () => paddle.CallDeferred(nameof(paddle.Shrink));  // Deferred to avoid physics query error
             
             // Wire brick destruction to BOTH game rules (speed/shrink) AND scoring
             brickGrid.BrickDestroyedWithColor += gameState.OnBrickDestroyed;    // Game rules (speed increases, paddle shrink)

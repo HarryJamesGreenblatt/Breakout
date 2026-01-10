@@ -105,6 +105,11 @@ namespace Breakout.Components
         public event Action<float> SpeedIncreaseRequired;
 
         /// <summary>
+        /// Emitted when paddle speed should increase to compensate for ball speed.
+        /// </summary>
+        public event Action<float> PaddleSpeedIncreaseRequired;
+
+        /// <summary>
         /// Emitted when paddle should shrink.
         /// </summary>
         public event Action PaddleShrinkRequired;
@@ -157,30 +162,34 @@ namespace Breakout.Components
             // Rule 1: Speed up after 4 hits (applied once)
             if (totalHits == 4 && !speedMilestone4Applied)
             {
-                SpeedIncreaseRequired?.Invoke(1.05f);
+                SpeedIncreaseRequired?.Invoke(1.15f);
+                PaddleSpeedIncreaseRequired?.Invoke(1.15f);
                 speedMilestone4Applied = true;
-                GD.Print("Speed increase #1 (4-hit milestone)");
+                GD.Print("Speed increase #1 (4-hit milestone): 15% faster");
             }
             // Rule 2: Speed up after 12 hits (applied once)
             else if (totalHits == 12 && !speedMilestone12Applied)
             {
-                SpeedIncreaseRequired?.Invoke(1.05f);
+                SpeedIncreaseRequired?.Invoke(1.15f);
+                PaddleSpeedIncreaseRequired?.Invoke(1.15f);
                 speedMilestone12Applied = true;
-                GD.Print("Speed increase #2 (12-hit milestone)");
+                GD.Print("Speed increase #2 (12-hit milestone): 15% faster");
             }
 
             // Rule 3: Speed up on contact with orange or red rows (once per color)
             if (color == Models.BrickColor.Orange && !speedOrangeRowApplied)
             {
-                SpeedIncreaseRequired?.Invoke(1.05f);
+                SpeedIncreaseRequired?.Invoke(1.15f);
+                PaddleSpeedIncreaseRequired?.Invoke(1.15f);
                 speedOrangeRowApplied = true;
-                GD.Print("Speed increase on first orange row contact");
+                GD.Print("Speed increase on first orange row contact: 15% faster");
             }
             else if (color == Models.BrickColor.Red && !speedRedRowApplied)
             {
-                SpeedIncreaseRequired?.Invoke(1.05f);
+                SpeedIncreaseRequired?.Invoke(1.15f);
+                PaddleSpeedIncreaseRequired?.Invoke(1.15f);
                 speedRedRowApplied = true;
-                GD.Print("Speed increase on first red row contact");
+                GD.Print("Speed increase on first red row contact: 15% faster");
             }
 
             // Canonical Breakout paddle shrink rule:

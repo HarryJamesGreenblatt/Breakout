@@ -13,6 +13,7 @@ namespace Breakout.Entities
         private Vector2 size;
         private bool inputEnabled = true;
         private float velocityX = 0f;  // Track horizontal velocity for paddle momentum transfer
+        private float speedMultiplier = 1f;  // Track cumulative speed increases
 
 
         public Paddle(Vector2 position, Vector2 size, Color color)
@@ -55,8 +56,8 @@ namespace Breakout.Entities
             // Handle input
             var input = Input.GetAxis("ui_left", "ui_right");
             
-            // Calculate and store velocity for physics momentum transfer
-            velocityX = (float)(Config.Paddle.Speed * input);
+            // Calculate and store velocity for physics momentum transfer (with speed multiplier)
+            velocityX = (float)(Config.Paddle.Speed * speedMultiplier * input);
             
             // Update position
             Position += new Vector2(velocityX * (float)delta, 0);
@@ -80,6 +81,16 @@ namespace Breakout.Entities
         /// Returns the size of the paddle.
         /// </summary>
         public Vector2 GetSize() => size;
+
+        /// <summary>
+        /// Applies a speed multiplier to paddle movement.
+        /// Called when ball speed increases to keep paddle responsive.
+        /// </summary>
+        public void ApplySpeedMultiplier(float factor)
+        {
+            speedMultiplier *= factor;
+            GD.Print($"Paddle speed multiplier applied: {factor}x, cumulative: {speedMultiplier}x");
+        }
 
         /// <summary>
         /// Shrinks the paddle to 50% of its original width.
