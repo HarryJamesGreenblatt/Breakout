@@ -2,7 +2,7 @@
 
 A faithful recreation of Atari's classic *Breakout* (1976) in **Godot 4.5 with C#**, built as a hands-on learning exercise in 2D game development fundamentals and architectural patterns.
 
-**Current Status:** Objective 1.1+ complete (MVP playable) — Nystrom's Component Pattern fully implemented with UI layer (January 10, 2026).
+**Current Status:** Objective 1.1++ complete (MVP fully playable with arcade-authentic physics and UI) — Nystrom's Component Pattern with proper speed preservation, paddle speed compensation, and color-based audio/visual feedback (January 10, 2026).
 
 ---
 
@@ -21,24 +21,24 @@ Rather than providing complete code, this project **implements features iterativ
 
 ## What's Implemented
 
-### MVP (Objective 1.1 Complete ✅)
+### MVP (Objective 1.1++ Complete ✅)
 
-- **Entities:** Paddle (player-controlled), Ball (physics-driven), Brick Grid (8×8, destructible), Walls (boundary)
-- **Gameplay:** Ball bounces off walls, paddle, and bricks; bricks destroyed on contact; speed increases (4, 12 hit milestones) working; paddle shrinking working
+- **Entities:** Paddle (player-controlled with speed compensation), Ball (physics-driven with magnitude preservation), Brick Grid (8×8, destructible with color-based feedback), Walls (boundary)
+- **Gameplay:** Ball bounces off walls, paddle, and bricks preserving speed magnitude; bricks destroyed on contact; speed increases (4, 12 hit milestones + orange/red row contact) at 15%; paddle speed increases at 10% to compensate; paddle shrinks on red row breakthrough (deferred execution)
 - **Collision Detection:** Signal-based (`AreaEntered`/`AreaExited` events) instead of polling
-- **Components:** PhysicsComponent (ball physics, speed multipliers), GameStateComponent (rules & state), UIComponent (HUD display), BrickGrid (grid management in Infrastructure/), EntityFactoryUtility (factory in Utilities/)
-- **UI Layer:** UIComponent (CanvasLayer) displays score and lives; wired to ScoreChanged/LivesChanged events; proper layout with brick grid offset
-- **Brick Destruction:** Ball collision → PhysicsComponent.HandleBrickCollision() → brick.Destroy() → BrickDestroyed signal → BrickGrid listener
-- **Configuration:** Centralized in `Config.cs` with `Config.Brick` (entity properties) and `Config.BrickGrid` (infrastructure layout); dynamic brick grid spacing
+- **Components:** PhysicsComponent (ball physics with proper magnitude preservation across bounces), GameStateComponent (canonical Breakout rules), UIComponent (HUD with color-based score flashing), SoundComponent (8-bit synthesis with color-based polyphonic cracks), BrickGrid (Infrastructure/), EntityFactoryUtility (Utilities/)
+- **UI Layer:** Zero-padded 3-digit score display, lives counter, color-synchronized score flashing (red=4, orange=3, green=2, yellow=1), centered game over message accounting for wall offset, bold sans-serif arcade font
+- **Physics:** Magnitude preservation across all bounces (paddle reconstructs velocity to maintain speed), randomized launch angle (60°-120° downward), speed multiplier persistence across ball resets
+- **Audio:** Color-based polyphonic cracking (1-4 cracks matching brick value), 8-bit square wave synthesis
+- **Brick Destruction:** Ball collision → PhysicsComponent.HandleBrickCollision() → brick.Destroy() → BrickDestroyed signal → BrickGrid listener → color passed to GameStateComponent for rules/scoring/events
+- **Configuration:** Centralized in `Config.cs` with `Config.Brick`, `Config.BrickGrid`, `Config.Paddle` (entity properties and infrastructure layout); dynamic brick grid spacing
 - **Brick Colors:** Type-safe enum with scoring metadata (Red=7pts, Orange=5pts, Green=3pts, Yellow=1pt)
-- **Architecture:** Nystrom's Component Pattern — plain C# components own state & logic; thin entities forward events; pure signal wiring; direct component access
+- **Architecture:** Nystrom's Component Pattern — plain C# components own state & logic; thin entities forward events; pure signal wiring; direct component access; event-driven communication (no state drilling)
 
 ### Not Yet Implemented
 
-- Scoring display UI
-- Lives display UI
-- Game state machine (Playing, GameOver, Level Complete)
-- Level progression
+- Level progression and level complete state
+- Ball speed cap (may need for extremely long games)
 
 ---
 
