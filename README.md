@@ -2,7 +2,7 @@
 
 A faithful recreation of Atari's classic *Breakout* (1976) in **Godot 4.5 with C#**, built as a hands-on learning exercise in 2D game development fundamentals and architectural patterns.
 
-**Current Status:** Objective 1.1 complete (MVP playable) — Nystrom's Component Pattern fully implemented (January 5, 2026).
+**Current Status:** Objective 1.1+ complete (MVP playable) — Nystrom's Component Pattern fully implemented with UI layer (January 10, 2026).
 
 ---
 
@@ -26,9 +26,10 @@ Rather than providing complete code, this project **implements features iterativ
 - **Entities:** Paddle (player-controlled), Ball (physics-driven), Brick Grid (8×8, destructible), Walls (boundary)
 - **Gameplay:** Ball bounces off walls, paddle, and bricks; bricks destroyed on contact; speed increases (4, 12 hit milestones) working; paddle shrinking working
 - **Collision Detection:** Signal-based (`AreaEntered`/`AreaExited` events) instead of polling
-- **Components:** PhysicsComponent (ball physics, speed multipliers), GameStateComponent (rules & state), BrickGrid (grid management in Infrastructure/), EntityFactoryUtility (factory in Utilities/)
+- **Components:** PhysicsComponent (ball physics, speed multipliers), GameStateComponent (rules & state), UIComponent (HUD display), BrickGrid (grid management in Infrastructure/), EntityFactoryUtility (factory in Utilities/)
+- **UI Layer:** UIComponent (CanvasLayer) displays score and lives; wired to ScoreChanged/LivesChanged events; proper layout with brick grid offset
 - **Brick Destruction:** Ball collision → PhysicsComponent.HandleBrickCollision() → brick.Destroy() → BrickDestroyed signal → BrickGrid listener
-- **Configuration:** Centralized in `Config.cs`; dynamic brick grid spacing
+- **Configuration:** Centralized in `Config.cs` with `Config.Brick` (entity properties) and `Config.BrickGrid` (infrastructure layout); dynamic brick grid spacing
 - **Brick Colors:** Type-safe enum with scoring metadata (Red=7pts, Orange=5pts, Green=3pts, Yellow=1pt)
 - **Architecture:** Nystrom's Component Pattern — plain C# components own state & logic; thin entities forward events; pure signal wiring; direct component access
 
@@ -52,6 +53,7 @@ Rather than providing complete code, this project **implements features iterativ
 1. **Components/** (Business Logic) — Own state and logic, emit C# events:
    - `PhysicsComponent` — Ball velocity, position, collision tracking, speed multipliers, bounce logic
    - `GameStateComponent` — Score, lives, hit count, speed/shrink decision logic
+   - `UIComponent` — HUD display (score, lives labels); listens to ScoreChanged/LivesChanged events
 
 2. **Infrastructure/** (World Structure) — Entity collections forming environment:
    - `BrickGrid` — Brick grid management and destruction tracking
@@ -68,7 +70,7 @@ Rather than providing complete code, this project **implements features iterativ
 
 5. **Game/** (Orchestration + Config):
    - `Controller` — Pure signal wiring; zero business logic; instantiates via EntityFactoryUtility
-   - `Config` — Centralized constants
+   - `Config` — Centralized constants; split into `Config.Brick` (entity) and `Config.BrickGrid` (infrastructure)
 
 **Signal Flow Example:**
 ```
@@ -87,6 +89,32 @@ Ball hits brick → PhysicsComponent.HandleBrickCollision()
 ```
 
 **Rationale:** Per Nystrom's Component pattern, components own state + behavior. Entities are thin containers. Controller is mechanical wiring. Zero state duplication. Each concern has exactly one owner.
+
+**Config Structure (Brick vs. BrickGrid):**
+```csharp
+// Config.Brick — entity-level properties
+public static class Brick
+{
+    public static readonly Vector2 Size = ComputeBrickSize();
+    public const int CollisionLayer = 1;
+    public const int CollisionMask = 1;
+}
+
+// Config.BrickGrid — infrastructure layout properties
+public static class BrickGrid
+{
+    public const int GridRows = 8;
+    public const int GridColumns = 8;
+    public const float HorizontalGap = 3f;
+    public static readonly Vector2 GridStartPosition = new Vector2(20, 65);  // Y=65 provides clearance below UI
+    public static readonly float GridSpacingX = Brick.Size.X + HorizontalGap;
+    public static readonly float GridSpacingY = 20f;
+}
+```
+
+- `Config.Brick` is owned by the entity and infrastructure (BrickGrid uses Brick.Size for layout)
+- `Config.BrickGrid` is owned by BrickGrid infrastructure (controls grid layout and positioning)
+- One-way dependency: Brick.ComputeBrickSize() references BrickGrid dimensions
 
 ---
 
@@ -245,6 +273,38 @@ docs: documentation
 - ✅ Paddle shrinks exactly once (via flag guard)
 - ✅ No state polling; pure event-driven
 - ✅ **Architecture is solid, complete, and ready for feature development**
+
+### Session 3: UI Component & Config Restructuring (January 8-10, 2026)
+
+**Phase 1: UIComponent Implementation**
+- Created `UIComponent` (CanvasLayer) for HUD display (score, lives)
+- Implements `OnScoreChanged(int)` and `OnLivesChanged(int)` event handlers
+- Implements `ShowGameOverMessage()` for game-over display
+- Wired to `GameStateComponent.ScoreChanged` and `LivesChanged` events in Controller
+
+**Phase 2: UI Layout Fix**
+- **Problem:** UIComponent labels (Y=10, 32px font) overlapped brick grid starting at Y=40
+- **Solution:** Offset brick grid Y position via `Config.BrickGrid.GridStartPosition.Y`: 40 → 65
+- **Benefit:** ~55px clearance below UI labels; clean visual separation without moving UI
+- **Approach:** Configuration-driven solution (better than moving UI labels)
+
+**Phase 3: Config Restructuring (Brick vs. BrickGrid)**
+- **Problem:** Single `Config.Brick` class mixed entity properties with infrastructure layout
+- **Split into two independent sections:**
+  - `Config.Brick` — owns entity properties (Size, CollisionLayer/Mask)
+  - `Config.BrickGrid` — owns infrastructure layout (GridRows, GridColumns, GridStartPosition, GridSpacing)
+- **Updated all usages:**
+  - `Brick.cs` (entity) → references `Config.Brick.*`
+  - `BrickGrid.cs` (infrastructure) → references `Config.BrickGrid.*`
+  - `Config.Brick.ComputeBrickSize()` → references `Config.BrickGrid` for grid dimensions
+- **Benefit:** Clear separation of concerns; independent tweaking of either subsystem; one-way dependency is minimal
+
+**Result:**
+- ✅ HUD displays score and lives in real-time
+- ✅ UI properly positioned without overlap
+- ✅ Config architecture reflects distinction between entity and infrastructure
+- ✅ Brick and Grid configurations are independently maintainable
+- ✅ One-way dependency (Brick → BrickGrid) is natural and minimal
 
 ---
 
