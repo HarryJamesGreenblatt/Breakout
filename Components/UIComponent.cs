@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using Breakout.Game;
 
 namespace Breakout.Components
@@ -25,10 +26,8 @@ namespace Breakout.Components
         #region Lifecycle
         public override void _Ready()
         {
-            // Create bold sans-serif SystemFont for arcade-style text
-            var arcadeFont = new SystemFont();
-            arcadeFont.FontNames = new[] { "Arial", "Helvetica", "sans-serif" };
-            arcadeFont.FontWeight = 700;  // Bold
+            // Load arcade font using the official Godot 4.5 runtime font loading method
+            Font arcadeFont = LoadArcadeFont();
 
             // Create score label (top-left with 15px padding)
             scoreLabel = new Label();
@@ -63,7 +62,50 @@ namespace Breakout.Components
             livesLabel.HorizontalAlignment = HorizontalAlignment.Right;
             AddChild(livesLabel);
 
-            GD.Print("UIComponent initialized (bold sans-serif, symmetric 15px padding)");
+            GD.Print("UIComponent initialized (arcade font loaded, 15px padding)");
+        }
+
+        /// <summary>
+        /// Loads arcade font using Godot 4.5 official runtime font loading API.
+        /// Based on: https://docs.godotengine.org/en/4.5/tutorials/io/runtime_file_loading_and_saving.html#fonts
+        /// 
+        /// Note: load_dynamic_font() works with filesystem paths that can be resolved
+        /// by Godot, including res:// paths which are automatically converted to project folder paths.
+        /// </summary>
+        private Font LoadArcadeFont()
+        {
+            const string fontPath = "res://UI/Fonts/PressStart2P-Regular.ttf";
+            
+            try
+            {
+                var fontFile = new FontFile();
+                
+                // Use load_dynamic_font() as documented in Godot 4.5
+                Error error = fontFile.LoadDynamicFont(fontPath);
+                
+                if (error == Error.Ok)
+                {
+                    GD.Print($"Successfully loaded arcade font from: {fontPath}");
+                    return fontFile;
+                }
+                else
+                {
+                    GD.PrintErr($"FontFile.load_dynamic_font() failed with error code: {error}");
+                    GD.PrintErr($"Attempted path: {fontPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                GD.PrintErr($"Exception in LoadArcadeFont(): {ex.Message}");
+                GD.PrintErr($"Stack trace: {ex.StackTrace}");
+            }
+            
+            // Fallback: use bold SystemFont if loading fails
+            GD.Print("Falling back to SystemFont");
+            var fallbackFont = new SystemFont();
+            fallbackFont.FontNames = new[] { "Arial", "Helvetica", "sans-serif" };
+            fallbackFont.FontWeight = 800;  // Extra bold
+            return fallbackFont;
         }
         #endregion
 
@@ -119,10 +161,8 @@ namespace Breakout.Components
         /// </summary>
         public void ShowGameOverMessage()
         {
-            // Create bold sans-serif SystemFont for consistency
-            var arcadeFont = new SystemFont();
-            arcadeFont.FontNames = new[] { "Arial", "Helvetica", "sans-serif" };
-            arcadeFont.FontWeight = 700;  // Bold
+            // Load arcade font for consistency
+            Font arcadeFont = LoadArcadeFont();
 
             gameOverLabel = new Label();
             gameOverLabel.Text = "GAME OVER";
