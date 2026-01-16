@@ -59,6 +59,9 @@ namespace Breakout.Utilities
 
             // Game over UI
             gameState.GameOver += ui.ShowGameOverMessage;
+            
+            // Continue countdown UI
+            gameState.ContinueCountdownChanged += ui.OnContinueCountdownChanged;
         }
 
         /// <summary>

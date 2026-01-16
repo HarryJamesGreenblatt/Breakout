@@ -22,6 +22,14 @@ namespace Breakout.Components
     /// </summary>
     public partial class GameStateComponent
     {
+        #region Constants
+        /// <summary>
+        /// Continue countdown duration in seconds (arcade-style).
+        /// Player has 10 seconds to press a key to continue, or game over is final.
+        /// </summary>
+        private const float ContinueCountdownSeconds = 10f;
+        #endregion
+
         #region State Enum
         public enum GameState
         {
@@ -87,6 +95,13 @@ namespace Breakout.Components
         /// Current game flow state.
         /// </summary>
         private GameState currentState = GameState.Playing;
+
+        /// <summary>
+        /// Continue countdown timer (seconds remaining).
+        /// When game reaches GameOver state, this counts down from ContinueCountdownSeconds.
+        /// When it reaches 0, no more restart allowed (final game over).
+        /// </summary>
+        private float continueCountdownRemaining = 0f;
         #endregion
 
         #region Events
@@ -135,6 +150,18 @@ namespace Breakout.Components
         /// Emitted specifically when entering LevelComplete state.
         /// </summary>
         public event Action LevelComplete;
+
+        /// <summary>
+        /// Emitted when continue countdown changes (every second during game over).
+        /// Passes remaining seconds as integer for UI display.
+        /// </summary>
+        public event Action<int> ContinueCountdownChanged;
+
+        /// <summary>
+        /// Emitted when continue countdown expires (reaches 0).
+        /// Allows Controller to exit the game gracefully.
+        /// </summary>
+        public event Action ContinueCountdownExpired;
         #endregion
 
         #region Constructor
@@ -268,6 +295,7 @@ namespace Breakout.Components
         /// <summary>
         /// Transition to a new game state.
         /// Validates transition rules before allowing state change.
+        /// When entering GameOver, starts the continue countdown.
         /// </summary>
         public void SetState(GameState newState)
         {
@@ -283,6 +311,8 @@ namespace Breakout.Components
             switch (currentState)
             {
                 case GameState.GameOver:
+                    continueCountdownRemaining = ContinueCountdownSeconds;
+                    ContinueCountdownChanged?.Invoke((int)continueCountdownRemaining);
                     GameOver?.Invoke();
                     break;
 
@@ -303,6 +333,36 @@ namespace Breakout.Components
         public bool IsPlaying() => currentState == GameState.Playing;
 
         /// <summary>
+        /// Get remaining continue countdown seconds.
+        /// Returns 0 if not in GameOver state.
+        /// </summary>
+        public float GetContinueCountdownRemaining() => continueCountdownRemaining;
+
+        /// <summary>
+        /// Update continue countdown (called each frame from Controller during GameOver).
+        /// Decrements timer and emits event when seconds change.
+        /// </summary>
+        public void UpdateContinueCountdown(float delta)
+        {
+            if (currentState != GameState.GameOver || continueCountdownRemaining <= 0)
+                return;
+
+            continueCountdownRemaining -= delta;
+            if (continueCountdownRemaining < 0)
+                continueCountdownRemaining = 0;
+
+            // Emit event when seconds digit changes (once per second)
+            int currentSeconds = (int)continueCountdownRemaining;
+            ContinueCountdownChanged?.Invoke(currentSeconds);
+
+            // When countdown expires, emit event so Controller can quit
+            if (continueCountdownRemaining == 0)
+            {
+                ContinueCountdownExpired?.Invoke();
+            }
+        }
+
+        /// <summary>
         /// Reset all game state to initial values.
         /// Called when restarting the game.
         /// </summary>
@@ -318,6 +378,7 @@ namespace Breakout.Components
             paddleHasShrunk = false;
             redRowBroken = false;
             currentState = GameState.Playing;
+            continueCountdownRemaining = 0f;
 
             ScoreChanged?.Invoke(score);
             LivesChanged?.Invoke(lives);

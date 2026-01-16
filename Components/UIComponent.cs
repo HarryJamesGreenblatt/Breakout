@@ -21,6 +21,7 @@ namespace Breakout.Components
         private Label scoreLabel;
         private Label livesLabel;
         private Label gameOverLabel;
+        private Label continueCountdownLabel;
         private Tween scoreFlashTween;
         private Tween livesFlashTween;
         #endregion
@@ -239,6 +240,67 @@ namespace Breakout.Components
             if (newState == GameStateComponent.GameState.Playing)
             {
                 HideGameOverMessage();
+                HideContinueCountdown();
+            }
+        }
+
+        /// <summary>
+        /// Called when continue countdown changes.
+        /// Displays or updates the countdown number below game over message.
+        /// </summary>
+        public void OnContinueCountdownChanged(int secondsRemaining)
+        {
+            if (secondsRemaining > 0)
+            {
+                if (continueCountdownLabel == null)
+                {
+                    // Create countdown label below game over message
+                    Font arcadeFont = LoadArcadeFont();
+                    
+                    continueCountdownLabel = new Label();
+                    continueCountdownLabel.Text = $"CONTINUE: {secondsRemaining}";
+                    continueCountdownLabel.AddThemeFontSizeOverride("font_size", (int)(Config.UI.GameOverFontSize * 0.7f));  // Smaller subheading
+                    continueCountdownLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));
+                    continueCountdownLabel.AddThemeFontOverride("font", arcadeFont);
+                    continueCountdownLabel.HorizontalAlignment = HorizontalAlignment.Center;
+                    continueCountdownLabel.VerticalAlignment = VerticalAlignment.Center;
+                    
+                    continueCountdownLabel.AnchorLeft = 0f;
+                    continueCountdownLabel.AnchorRight = 1f;
+                    continueCountdownLabel.AnchorTop = 0.5f;
+                    continueCountdownLabel.AnchorBottom = 0.5f;
+                    
+                    continueCountdownLabel.OffsetLeft = Config.WallThickness;
+                    continueCountdownLabel.OffsetRight = -Config.WallThickness;
+                    continueCountdownLabel.OffsetTop = 50;  // Below game over message
+                    continueCountdownLabel.OffsetBottom = 150;
+                    
+                    AddChild(continueCountdownLabel);
+                    GD.Print($"Continue countdown displayed: {secondsRemaining}");
+                }
+                else
+                {
+                    // Update countdown text
+                    continueCountdownLabel.Text = $"CONTINUE: {secondsRemaining}";
+                }
+            }
+            else
+            {
+                HideContinueCountdown();
+            }
+        }
+
+        /// <summary>
+        /// Hides the continue countdown label.
+        /// Called when countdown reaches 0 or game returns to playing state.
+        /// </summary>
+        private void HideContinueCountdown()
+        {
+            if (continueCountdownLabel != null)
+            {
+                continueCountdownLabel.QueueFree();
+                continueCountdownLabel = null;
+                GD.Print("Continue countdown hidden");
             }
         }
         #endregion

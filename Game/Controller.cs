@@ -55,15 +55,24 @@ namespace Breakout.Game
             SignalWiringUtility.WireGameStateSoundEvents(gameState, soundComponent);
             SignalWiringUtility.WireGameOverState(gameState, ball, paddle);
 
+            // When continue countdown expires, quit the game (same as ESC)
+            gameState.ContinueCountdownExpired += () => GetTree().Quit();
+
             GD.Print("Controller initialized: entities created, signals wired");
         }
 
         public override void _Process(double delta)
         {
-            // Handle restart on game over (R key)
-            if (Input.IsActionJustPressed("ui_accept") && gameState.GetState() == GameStateComponent.GameState.GameOver)
+            // Update continue countdown when in game over state
+            if (gameState.GetState() == GameStateComponent.GameState.GameOver)
             {
-                RestartGame();
+                gameState.UpdateContinueCountdown((float)delta);
+
+                // Handle restart on game over (only if countdown > 0)
+                if (Input.IsActionJustPressed("ui_accept") && gameState.GetContinueCountdownRemaining() > 0)
+                {
+                    RestartGame();
+                }
             }
 
             // Handle ESC key to exit on game over
