@@ -4,7 +4,7 @@
 
 A faithful recreation of Atari's classic *Breakout* (1976) in **Godot 4.5 with C#**, built as a hands-on learning exercise in 2D game development fundamentals and architectural patterns.
 
-**Current Status:** Objective 1.1++ complete (MVP fully playable with arcade-authentic physics and UI) — Nystrom's Component Pattern with proper speed preservation, paddle speed compensation, and color-based audio/visual feedback (January 10, 2026).
+**Current Status:** Objective 1.1++ complete with polish features (MVP fully playable with arcade-authentic physics, UI, and smooth transitions) — Destroyed brick tracking, fade-in transitions, auto-play test mode with full-width paddle, proper deferred physics operations, and critical bug fixes for lives reset and UI timing (January 16, 2026).
 
 ---
 
@@ -33,9 +33,11 @@ Rather than providing complete code, this project **implements features iterativ
 - **Physics:** Magnitude preservation across all bounces (paddle reconstructs velocity to maintain speed), randomized launch angle (60°-120° downward), speed multiplier persistence across ball resets
 - **Audio:** Color-based polyphonic cracking (1-4 cracks matching brick value), 8-bit square wave synthesis
 - **Brick Destruction:** Ball collision → PhysicsComponent.HandleBrickCollision() → brick.Destroy() → BrickDestroyed signal → BrickGrid listener → color passed to GameStateComponent for rules/scoring/events
+- **Destroyed Brick Tracking:** BrickGrid tracks destroyed brick IDs; TransitionComponent fades only destroyed bricks on restart while unbroken bricks remain visible
+- **Auto-Play Test Mode:** Press spacebar to toggle full-width paddle (spans entire viewport) for testing without manual control; GameStateComponent owns auto-play flag, PhysicsComponent implements logic
 - **Configuration:** Centralized in `Config.cs` with `Config.Brick`, `Config.BrickGrid`, `Config.Paddle` (entity properties and infrastructure layout); dynamic brick grid spacing
 - **Brick Colors:** Type-safe enum with scoring metadata (Red=7pts, Orange=5pts, Green=3pts, Yellow=1pt)
-- **Architecture:** Nystrom's Component Pattern — plain C# components own state & logic; thin entities forward events; pure signal wiring; direct component access; event-driven communication (no state drilling)
+- **Architecture:** Nystrom's Component Pattern — plain C# components own state & logic; thin entities forward events; pure signal wiring; direct component access; event-driven communication (no state drilling); PhysicsComponent owns collision-affecting operations
 
 ### Not Yet Implemented
 
