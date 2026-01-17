@@ -232,12 +232,15 @@ namespace Breakout.Components
         }
 
         /// <summary>
+        /// <summary>
         /// Called when game state changes.
-        /// Hides game over message if transitioning back to Playing.
+        /// Hides game over message if transitioning back to Playing or when Continuing/Transitioning starts.
         /// </summary>
         public void OnGameStateChanged(GameStateComponent.GameState newState)
         {
-            if (newState == GameStateComponent.GameState.Playing)
+            if (newState == GameStateComponent.GameState.Playing 
+                || newState == GameStateComponent.GameState.Continuing
+                || newState == GameStateComponent.GameState.Transitioning)
             {
                 HideGameOverMessage();
                 HideContinueCountdown();

@@ -16,13 +16,13 @@ namespace Breakout.Utilities
     public static class SignalWiringUtility
     {
         /// <summary>
-        /// Wire game rule signals: speed increases, paddle shrinking.
+        /// Wire game rule signals: speed increases.
+        /// Note: PaddleShrinkRequired is wired by Controller directly (business logic).
         /// </summary>
         public static void WireGameRules(GameStateComponent gameState, PhysicsComponent ballPhysics, Paddle paddle)
         {
             gameState.SpeedIncreaseRequired += ballPhysics.ApplySpeedMultiplier;
             gameState.PaddleSpeedIncreaseRequired += paddle.ApplySpeedMultiplier;
-            gameState.PaddleShrinkRequired += () => paddle.CallDeferred(nameof(paddle.Shrink));
         }
 
         /// <summary>

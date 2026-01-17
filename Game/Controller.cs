@@ -3,6 +3,7 @@ using Breakout.Utilities;
 using Breakout.Entities;
 using Breakout.Infrastructure;
 using Godot;
+using System.Linq;
 
 namespace Breakout.Game
 {
@@ -60,6 +61,12 @@ namespace Breakout.Game
             SignalWiringUtility.WireGameOverState(gameState, ball, paddle);
             SignalWiringUtility.WireTransitionState(gameState, paddle);
 
+            // Wire paddle shrinking (PhysicsComponent handles deferred execution)
+            gameState.PaddleShrinkRequired += () => ballPhysics.ShrinkPaddle(paddle);
+
+            // Wire auto-play toggle (business logic: PhysicsComponent implements paddle resize)
+            gameState.AutoPlayToggled += (enabled) => ballPhysics.UpdateAutoPlayPaddle(paddle, enabled);
+
             // Wire transition events
             transitionComponent.TransitionComplete += () => 
             {
@@ -84,6 +91,12 @@ namespace Breakout.Game
 
         public override void _Process(double delta)
         {
+            // Handle spacebar to toggle auto-play mode (test feature)
+            if (Input.IsActionJustPressed("ui_select"))
+            {
+                gameState.ToggleAutoPlay();
+            }
+
             // Update continue countdown when in game over state
             if (gameState.GetState() == GameStateComponent.GameState.GameOver)
             {
@@ -138,9 +151,15 @@ namespace Breakout.Game
             // Reset paddle state (will ease to center during transition)
             paddle.ResetForGameRestart();
 
-            // Reset and rebuild brick grid (invisible initially for fade-in)
+            // Reset and rebuild brick grid
+            // Save destroyed IDs before reset clears them
+            var destroyedBrickIds = brickGrid.GetDestroyedBrickIds().ToList();
+            
+            // Reset clears destroyed list and removes all bricks
             brickGrid.ResetForGameRestart(this);
-            brickGrid.InstantiateGrid(this, startInvisible: true);
+            
+            // Instantiate grid: unbroken bricks visible, destroyed bricks invisible for fade-in
+            brickGrid.InstantiateGrid(this, startInvisible: false, destroyedBrickIds: destroyedBrickIds);
 
             // Enter transitioning state and play animation sequence
             gameState.EnterTransitionState();

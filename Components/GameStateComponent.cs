@@ -105,6 +105,12 @@ namespace Breakout.Components
         /// When it reaches 0, no more restart allowed (final game over).
         /// </summary>
         private float continueCountdownRemaining = 0f;
+
+        /// <summary>
+        /// Auto-play mode enabled (test feature).
+        /// When true, paddle spans full width (impossible to miss).
+        /// </summary>
+        private bool autoPlayEnabled = false;
         #endregion
 
         #region Events
@@ -132,6 +138,12 @@ namespace Breakout.Components
         /// Emitted when paddle should shrink.
         /// </summary>
         public event Action PaddleShrinkRequired;
+
+        /// <summary>
+        /// Emitted when auto-play mode is toggled.
+        /// Passes the new auto-play enabled state.
+        /// </summary>
+        public event Action<bool> AutoPlayToggled;
 
         /// <summary>
         /// Emitted when a brick is destroyed (for scoring).
@@ -399,6 +411,17 @@ namespace Breakout.Components
         }
 
         /// <summary>
+        /// Toggle auto-play mode (test feature).
+        /// Emits AutoPlayToggled event with new state.
+        /// </summary>
+        public void ToggleAutoPlay()
+        {
+            autoPlayEnabled = !autoPlayEnabled;
+            AutoPlayToggled?.Invoke(autoPlayEnabled);
+            GD.Print($"Auto-play mode: {(autoPlayEnabled ? "ON" : "OFF")}");
+        }
+
+        /// <summary>
         /// Reset all game state to initial values.
         /// Called when restarting the game.
         /// Does NOT emit LivesChanged to avoid triggering sound effects during restart.
@@ -414,11 +437,13 @@ namespace Breakout.Components
             speedRedRowApplied = false;
             paddleHasShrunk = false;
             redRowBroken = false;
-            currentState = GameState.Playing;
             continueCountdownRemaining = 0f;
+            autoPlayEnabled = false;  // Disable auto-play on restart
 
             ScoreChanged?.Invoke(score);
-            // Don't emit LivesChanged - would trigger decrement sound during restart
+            // Emit LivesChanged so UI updates, but we remain in Continuing state
+            // so the sound handler doesn't play decrement sound
+            LivesChanged?.Invoke(lives);
             StateChanged?.Invoke(currentState);  // Notify listeners (e.g., UIComponent) of state transition
             GD.Print("GameState reset to initial values");
         }

@@ -104,8 +104,25 @@ namespace Breakout.Components
         /// </summary>
         private void FadeInBricks(BrickGrid brickGrid, float duration)
         {
+            // Get destroyed brick IDs (only these should fade in during restart)
+            var destroyedIds = new HashSet<int>(brickGrid.GetDestroyedBrickIds());
+            
             foreach (var brick in brickGrid.GetAllBricks())
             {
+                // Only fade in destroyed bricks
+                // Unbroken bricks are already visible (alpha=1) and don't need animation
+                if (destroyedIds.Count > 0)
+                {
+                    // During restart: only animate destroyed bricks
+                    // Skip if brick is not in destroyed list (it's unbroken and already visible)
+                    var brickIdStr = ((string)brick.Name).Split('_')[1];
+                    var brickId = int.Parse(brickIdStr);
+                    if (!destroyedIds.Contains(brickId))
+                    {
+                        continue;  // Skip unbroken bricks
+                    }
+                }
+                
                 var tween = CreateTween();
                 tween.SetEase(Tween.EaseType.InOut);
                 tween.SetTrans(Tween.TransitionType.Quad);

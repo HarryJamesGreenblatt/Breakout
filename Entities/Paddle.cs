@@ -120,10 +120,10 @@ namespace Breakout.Entities
             Position += new Vector2(velocityX * (float)delta, 0);
             
             // Constrain to viewport bounds (uses current size, not cached size)
-            float minX = 0;
-            float maxX = Config.ViewportWidth - size.X;
+            float minXBound = 0;
+            float maxXBound = Config.ViewportWidth - size.X;
             Position = new Vector2(
-                Mathf.Clamp(Position.X, minX, maxX),
+                Mathf.Clamp(Position.X, minXBound, maxXBound),
                 Position.Y
             );
         }
@@ -143,29 +143,12 @@ namespace Breakout.Entities
         public Vector2 GetSize() => size;
 
         /// <summary>
-        /// Applies a speed multiplier to paddle movement.
-        /// Called when ball speed increases to keep paddle responsive.
+        /// Set the paddle size (used by components to resize paddle).
+        /// Updates collision shape and visual representation.
         /// </summary>
-        public void ApplySpeedMultiplier(float factor)
+        public void SetSize(Vector2 newSize)
         {
-            speedMultiplier *= factor;
-            GD.Print($"Paddle speed multiplier applied: {factor}x, cumulative: {speedMultiplier}x");
-        }
-
-        /// <summary>
-        /// Shrinks the paddle to 60% of its original width.
-        /// Called by Controller when GameStateComponent emits PaddleShrinkRequired.
-        /// This is the canonical Breakout rule: paddle shrinks after breaking red row and hitting ceiling.
-        /// Uses deferred execution to avoid modifying collision shape during physics query.
-        /// </summary>
-        public void Shrink()
-        {
-            float originalWidth = size.X;
-            size = new Vector2(size.X * 0.6f, size.Y);
-            float widthDifference = originalWidth - size.X;
-            
-            // Move paddle right by half the width difference to center the shrink
-            Position += new Vector2(widthDifference / 2, 0);
+            size = newSize;
             
             // Update visual
             var visual = GetChild(1) as ColorRect;  // ColorRect is second child (after CollisionShape2D)
@@ -181,8 +164,16 @@ namespace Breakout.Entities
                 collisionShape.Shape = new RectangleShape2D { Size = size };
                 collisionShape.Position = size / 2;  // Center the collision shape
             }
+        }
 
-            GD.Print($"Paddle shrunk to {size.X}x{size.Y}");
+        /// <summary>
+        /// Applies a speed multiplier to paddle movement.
+        /// Called when ball speed increases to keep paddle responsive.
+        /// </summary>
+        public void ApplySpeedMultiplier(float factor)
+        {
+            speedMultiplier *= factor;
+            GD.Print($"Paddle speed multiplier applied: {factor}x, cumulative: {speedMultiplier}x");
         }
 
         /// <summary>
@@ -201,28 +192,20 @@ namespace Breakout.Entities
         /// </summary>
         public void ResetForGameRestart()
         {
-            Position = Config.Paddle.Position;
+            // Keep paddle at its current position so transition can ease it smoothly to center
+            // Don't reposition it here - the paddle will move from wherever it is to center
+            // during the transition animation
+            
             size = Config.Paddle.Size;
             speedMultiplier = 1f;
             velocityX = 0f;
             inputEnabled = true;
 
-            // Update visual
-            var visual = GetChild(1) as ColorRect;
-            if (visual != null)
-            {
-                visual.Size = size;
-            }
-
-            // Update collision shape
-            var collisionShape = GetChild(0) as CollisionShape2D;
-            if (collisionShape != null)
-            {
-                collisionShape.Shape = new RectangleShape2D { Size = size };
-                collisionShape.Position = size / 2;
-            }
+            // Update visual and collision shape
+            SetSize(Config.Paddle.Size);
 
             GD.Print($"Paddle reset to initial state from Config");
+
         }
 
         /// <summary>

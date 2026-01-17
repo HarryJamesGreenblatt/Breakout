@@ -1,5 +1,6 @@
 using Godot;
 using Breakout.Game;
+using Breakout.Entities;
 using System.Collections.Generic;
 
 namespace Breakout.Components
@@ -7,6 +8,7 @@ namespace Breakout.Components
     /// <summary>
     /// PhysicsComponent encapsulates ball physics simulation.
     /// Follows Nystrom's Component pattern: owns all physics state and behavior.
+    /// Inherits from Node to support deferred operations (required by Godot physics system).
     /// 
     /// Responsibilities:
     /// - Velocity state management
@@ -14,11 +16,12 @@ namespace Breakout.Components
     /// - Collision detection and bounce calculations
     /// - Collision state tracking (active contacts)
     /// - Speed modifiers for game rules
+    /// - Paddle physics operations (shrinking, auto-play)
     /// 
     /// This component is owned by Ball entity; Ball delegates physics to it.
     /// Component signals important events (collisions, out of bounds).
     /// </summary>
-    public class PhysicsComponent
+    public partial class PhysicsComponent : Node
     {
         #region Events
         /// <summary>
@@ -198,6 +201,53 @@ namespace Breakout.Components
             
             activeCollisions.Clear();
             GD.Print($"PhysicsComponent reset for game restart: launch angle {randomAngleDegrees:F1}°, velocity {velocity}");
+        }
+
+        /// <summary>
+        /// Shrink the paddle (affects physics collision).
+        /// Called when PaddleShrinkRequired signal fires.
+        /// Defers execution to avoid conflicts during physics query.
+        /// </summary>
+        public void ShrinkPaddle(Paddle paddle)
+        {
+            CallDeferred(nameof(ShrinkPaddleDeferred), paddle);
+        }
+
+        /// <summary>
+        /// Deferred shrink operation (called after physics query completes).
+        /// </summary>
+        private void ShrinkPaddleDeferred(Paddle paddle)
+        {
+            Vector2 currentSize = paddle.GetSize();
+            Vector2 shrunkSize = new Vector2(currentSize.X * 0.6f, currentSize.Y);
+            float widthDifference = currentSize.X - shrunkSize.X;
+            
+            // Move paddle right by half the width difference to center the shrink
+            paddle.Position += new Vector2(widthDifference / 2, 0);
+            
+            // Apply new size (updates collision shape)
+            paddle.SetSize(shrunkSize);
+            GD.Print($"Paddle shrunk to {shrunkSize.X}x{shrunkSize.Y}");
+        }
+
+        /// <summary>
+        /// Update paddle for auto-play mode (affects physics collision).
+        /// Called when AutoPlayToggled signal fires.
+        /// </summary>
+        public void UpdateAutoPlayPaddle(Paddle paddle, bool enabled)
+        {
+            if (enabled)
+            {
+                // Expand paddle to full viewport width
+                Vector2 fullWidth = new Vector2(Config.ViewportWidth, paddle.GetSize().Y);
+                paddle.Position = new Vector2(0, paddle.Position.Y);  // Align to left edge, keep Y
+                paddle.SetSize(fullWidth);
+            }
+            else
+            {
+                // Restore normal paddle width
+                paddle.SetSize(Config.Paddle.Size);
+            }
         }
         #endregion
 
