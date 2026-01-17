@@ -72,8 +72,10 @@ namespace Breakout.Game
             private static void EnsureInitialized()
             {
                 if (initialized) return;
-                cachedPosition = new Vector2(ViewportWidth / 2, ViewportHeight - 28);
                 cachedSize = new Vector2(ViewportWidth * 0.117f, ViewportHeight * 0.027f);
+                // Position is the top-left corner. To center the paddle horizontally, 
+                // subtract half the paddle width from the viewport center.
+                cachedPosition = new Vector2(ViewportWidth / 2 - cachedSize.X / 2, ViewportHeight - 28);
                 cachedSpeed = ViewportWidth * 0.586f;
                 initialized = true;
                 GD.Print($"Paddle config: pos={cachedPosition}, size={cachedSize}, speed={cachedSpeed}");
